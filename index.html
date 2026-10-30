@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="إدارة أعمالي">
+<meta name="theme-color" content="#1e4b41">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>إدارة أعمالي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: registry ledger — header with company switch, single scrolling column, bottom tab bar on phone / side rail on wide screens */
+:root{
+  --bg:#f2f4f1;--surface:#ffffff;--surface-2:#e8ede9;--ink:#16231f;--muted:#5b6a63;--line:#d4dcd7;
+  --brand:#1e4b41;--brand-ink:#ffffff;--accent:#a8741a;
+  --ok:#2e7a4d;--warn:#a96d12;--bad:#b3372e;--info:#2b678c;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1613;--surface:#15201c;--surface-2:#1c2924;--ink:#e4ebe7;--muted:#97a69f;--line:#293732;
+  --brand:#5cae99;--brand-ink:#08120f;--accent:#d8a243;--ok:#5bc189;--warn:#e2aa4a;--bad:#ee7b70;--info:#6eb0d6;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1613;--surface:#15201c;--surface-2:#1c2924;--ink:#e4ebe7;--muted:#97a69f;--line:#293732;
+  --brand:#5cae99;--brand-ink:#08120f;--accent:#d8a243;--ok:#5bc189;--warn:#e2aa4a;--bad:#ee7b70;--info:#6eb0d6;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;direction:rtl;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--brand)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:1.3}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.muted{color:var(--muted)}
+.sp{flex:1}
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--brand);color:var(--brand-ink);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.top-in{display:flex;align-items:center;gap:10px;max-width:1100px;margin:0 auto}
+.brand{font-family:var(--f-display);font-weight:700;font-size:18px;white-space:nowrap}
+.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:11px;opacity:.75;margin-top:-2px}
+.co-sel{min-width:0;flex:1;max-width:260px;background:color-mix(in srgb,var(--brand-ink) 14%,transparent);border:1px solid color-mix(in srgb,var(--brand-ink) 25%,transparent);color:var(--brand-ink);border-radius:10px;padding:7px 10px;font-size:13px}
+.co-sel option{color:#16231f;background:#fff}
+.sync{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid color-mix(in srgb,var(--brand-ink) 30%,transparent);color:var(--brand-ink);border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:color-mix(in srgb,var(--brand-ink) 45%,transparent)}
+.dot.on{background:#7fe0a8}.dot.busy{background:#f1c76a;animation:pulse 1s infinite}.dot.err{background:#ff8f86}
+@keyframes pulse{50%{opacity:.35}}
+/* shell */
+.shell{max-width:1100px;margin:0 auto;display:flex;gap:24px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 110px}
+.rail{display:none}
+main{flex:1;min-width:0;display:flex;flex-direction:column;gap:18px}
+.nav{position:fixed;inset:auto 0 0 0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav button{background:none;border:0;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);cursor:pointer}
+.nav button.on{color:var(--brand);font-weight:600}
+.nav svg{width:22px;height:22px}
+@media (min-width:900px){
+  .nav{display:none}
+  .rail{display:flex;flex-direction:column;gap:4px;width:200px;flex-shrink:0;position:sticky;top:80px;align-self:flex-start}
+  .rail button{display:flex;align-items:center;gap:10px;background:none;border:0;padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;text-align:right;font-size:14px}
+  .rail button.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset -3px 0 0 var(--brand)}
+  .rail svg{width:20px;height:20px}
+  .shell{padding-block:24px 40px}
+}
+/* blocks */
+.page-h{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.page-h h1{font-size:24px}
+.page-h p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel h2{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px;text-align:right;cursor:default}
+button.stat{cursor:pointer}
+.stat .lbl{font-size:12px;color:var(--muted);letter-spacing:.01em}
+.stat .val{font-family:var(--f-display);font-size:22px;font-weight:600}
+.stat.bad .val{color:var(--bad)}.stat.warn .val{color:var(--warn)}.stat.ok .val{color:var(--ok)}
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);background:none;border-inline:0;border-top:0;width:100%;text-align:right;cursor:pointer}
+.item:last-child{border-bottom:0}
+.item .main{flex:1;min-width:0}
+.item .t{font-weight:600;overflow-wrap:anywhere}
+.item .s{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;background:var(--surface-2);color:var(--brand)}
+.ico svg{width:20px;height:20px}
+.pill{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.pill.info{background:color-mix(in srgb,var(--info) 14%,transparent);color:var(--info)}
+.amt-in{color:var(--ok);font-weight:600}.amt-out{color:var(--ink);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row-end{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.quick button{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;cursor:pointer}
+.quick svg{width:22px;height:22px;color:var(--brand)}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
+.empty{padding:22px 8px;text-align:center;color:var(--muted);font-size:14px}
+.demo-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px dashed color-mix(in srgb,var(--accent) 55%,transparent);border-radius:var(--r);padding:10px 14px;font-size:13.5px}
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;overflow-wrap:anywhere}
+.chart-wrap{overflow-x:auto}
+.chart-wrap svg{display:block;width:100%;min-width:300px;height:auto}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:5px;vertical-align:-1px}
+.insight{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.insight:last-child{border-bottom:0}
+.insight .mk{width:4px;border-radius:4px;flex-shrink:0;background:var(--info)}
+.insight.bad .mk{background:var(--bad)}.insight.warn .mk{background:var(--warn)}.insight.ok .mk{background:var(--ok)}
+.insight .t{font-weight:600}.insight .s{font-size:13px;color:var(--muted)}
+.score{display:flex;align-items:center;gap:14px}
+.score .big{font-family:var(--f-display);font-size:34px;font-weight:700}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.thumb{aspect-ratio:3/4;max-width:100%;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;overflow:hidden;cursor:pointer;padding:0;font-size:11px;color:var(--muted)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb svg{width:28px;height:28px;color:var(--bad)}
+/* modal */
+.scrim{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,#000 45%,transparent);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;
+  padding:18px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.sheet.wide{max-width:900px}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:18px}}
+.sheet h2{font-size:19px}
+.form{display:flex;flex-direction:column;gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:13px;color:var(--muted)}
+.fld input,.fld select,.fld textarea{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+.fld textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.viewer img{width:100%;border-radius:10px}
+.viewer iframe{width:100%;height:70vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90vw}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-x pan-y}
+body{overscroll-behavior-y:contain;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y}
+button,a,label,.item,.chip,.folder,.fcard{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input,select,textarea,.search{font-size:16px!important}
+main.anim-next{animation:slideN .24s cubic-bezier(.2,.8,.2,1)}main.anim-prev{animation:slideP .24s cubic-bezier(.2,.8,.2,1)}main.anim-fade{animation:fadeIn .2s ease-out}
+@keyframes slideN{from{opacity:.35;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes slideP{from{opacity:.35;transform:translateX(22px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:.4}to{opacity:1}}
+.sheet{animation:sheetUp .22s cubic-bezier(.2,.8,.2,1)}@keyframes sheetUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.hbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;background:transparent;border:1px solid color-mix(in srgb,var(--brand-ink) 30%,transparent);color:var(--brand-ink);cursor:pointer;padding:0}
+.hbtn svg{width:19px;height:19px}
+@media (max-width:480px){.brand small{display:none}.brand{font-size:16px}.sync .st{max-width:84px;overflow:hidden;text-overflow:ellipsis}}
+.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:19;transform:translate(-50%,-70px);display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--brand);font-size:13px;font-weight:600;box-shadow:0 6px 18px color-mix(in srgb,#000 14%,transparent);opacity:0;pointer-events:none}
+.ptr svg{width:18px;height:18px}.ptr.spin svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.tip{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,var(--info) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--info) 28%,transparent);border-radius:var(--r);padding:11px 12px;font-size:13.5px}
+.tip>svg{width:20px;height:20px;color:var(--info);flex-shrink:0;margin-top:2px}
+.tip .x{background:none;border:0;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px}
+.drive{display:flex;align-items:center;gap:12px}
+.drive .ico{background:color-mix(in srgb,var(--info) 14%,transparent);color:var(--info)}
+.drive.on .ico{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.folder{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:right;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-width:0}
+.folder svg{width:30px;height:30px;color:var(--accent)}
+.folder .t{font-weight:600;overflow-wrap:anywhere;font-size:14px}.folder .s{font-size:12px;color:var(--muted)}
+.crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+.crumbs button{background:none;border:0;color:var(--brand);cursor:pointer;padding:2px 0;font-weight:600}
+.crumbs span{color:var(--muted)}
+.fname-row{display:flex;gap:8px;align-items:center}.fname-row input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px}
+.ob{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;
+  padding:calc(24px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+.ob-card{max-width:420px;display:flex;flex-direction:column;align-items:center;gap:16px;animation:fadeIn .25s ease-out}
+.ob-ill{width:104px;height:104px;border-radius:30px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center}
+.ob-ill svg{width:52px;height:52px}
+.ob h2{font-size:24px}.ob p{margin:0;color:var(--muted);font-size:16px;line-height:1.8}
+.dots{display:flex;gap:6px}.dots i{width:7px;height:7px;border-radius:99px;background:var(--line)}.dots i.on{width:22px;background:var(--brand)}
+.ob .skip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px}
+.gstep{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.gstep>summary{list-style:none;display:flex;gap:12px;align-items:center;padding:13px 14px;cursor:pointer}
+.gstep>summary::-webkit-details-marker{display:none}
+.gnum{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;flex-shrink:0;font-size:14px}
+.gstep.done .gnum{background:var(--ok);border-color:var(--ok);color:#fff}
+.gstep.done .gt{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent);color:var(--muted)}
+.gt{font-weight:600}.gsub{font-size:12.5px;color:var(--muted)}
+.gbody{padding:0 14px 14px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px;border-top:1px solid var(--line);padding-top:12px}
+.gbody h4{margin:0;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.01em}
+.gbody ul{margin:0;padding-inline-start:20px}.gbody li{margin:2px 0}
+.gbody a{color:var(--info);overflow-wrap:anywhere}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.fcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;text-align:right;cursor:pointer}
+.fcard .ico{width:42px;height:42px}
+.fcard .t{font-weight:600;font-family:var(--f-display)}.fcard .s{font-size:13px;color:var(--muted)}
+.steps{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:6px}
+.disclaimer{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.demo-note>svg{width:20px;height:20px;flex-shrink:0;color:var(--accent)}
+.item,.ov-row{flex-wrap:wrap}.item .main,.ov-row .main{flex:1 1 150px;min-width:140px}.ov-row .mini{flex:1 1 100%;justify-content:flex-start;padding-inline-start:50px}
+.tip b{margin-left:4px}
+@media (max-width:560px){.top-in{flex-wrap:wrap;row-gap:8px}.co-sel{order:9;flex:1 1 100%;max-width:none}}
+.focus{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--brand) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);border-radius:var(--r);padding:10px 12px;font-size:13.5px}
+.focus>svg{width:20px;height:20px;color:var(--brand);flex-shrink:0}
+.ov-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);background:none;border-inline:0;border-top:0;width:100%;text-align:right;cursor:pointer}
+.ov-row:last-child{border-bottom:0}.ov-row .main{flex:1;min-width:0}.ov-row .t{font-weight:600;overflow-wrap:anywhere}.ov-row .s{font-size:12.5px;color:var(--muted)}
+.mini{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.about{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-block:22px}
+.about .mono{width:64px;height:64px;border-radius:20px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:26px;margin-bottom:6px}
+.about .nm{font-family:var(--f-display);font-size:19px;font-weight:700}
+.about .rl{color:var(--muted);font-size:13.5px}
+.about .en{direction:ltr;font-family:var(--f-body);letter-spacing:.01em}
+.about hr{width:60px;border:0;border-top:1px solid var(--line);margin:8px 0}
+.credit{text-align:center;font-size:12px;color:var(--muted);padding-block:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+/* ========== icons ========== */
+const I={
+home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',
+users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6 6 0 0 1 3.5 5.5"/></svg>',
+wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="14.5" r="1.2"/></svg>',
+chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>',
+brief:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>',
+spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>',
+gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+in:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>',
+out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
+pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><text x="12" y="17.5" font-size="5.5" text-anchor="middle" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="700">PDF</text></svg>',
+building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4"/></svg>',
+cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8.5a4.5 4.5 0 0 1-.5 9.5z"/></svg>',
+cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+folder:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 16.8h.01"/></svg>',
+compass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7L20 8.5M20 3.5v5h-5"/></svg>',
+check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+clip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L15.5 7"/></svg>'
+};
+
+/* ========== constants ========== */
+const CO_DOC_TYPES=["سجل تجاري","شهادة التسجيل الضريبي","شهادة ضريبة القيمة المضافة","عضوية غرفة التجارة والصناعة","رخصة بلدية","عقد إيجار المقر","ترخيص الدفاع المدني","وثيقة تأمين","عقد مع عميل/مورّد","شهادة بنكية / IBAN","أخرى"];
+const EMP_DOC_TYPES=["البطاقة الشخصية / بطاقة مقيم","جواز السفر","تصريح العمل (ملكية)","عقد العمل","الشهادة الصحية","رخصة القيادة","المؤهل العلمي","أخرى"];
+const PROJ_DOC_TYPES=["عقد المشروع","خطاب الترسية / أمر العمل","تصريح بناء","مخططات معتمدة","كفالة بنكية (حسن تنفيذ / دفعة مقدمة)","وثيقة تأمين المشروع","محضر تسليم الموقع","مستخلص / فاتورة","محضر استلام نهائي","أخرى"];
+const REQUIRED_EMP=["البطاقة الشخصية / بطاقة مقيم","جواز السفر"];
+const OUT_CATS=["إيجار","كهرباء","ماء","رواتب","إنترنت واتصالات","وقود ومواصلات","صيانة","مشتريات وبضاعة","رسوم حكومية","تأمين","تسويق","أخرى"];
+const IN_CATS=["مبيعات","خدمات","دفعة مشروع","استثمار / تمويل","أخرى"];
+const MONTHS=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const COLL=["companies","docs","employees","tx","bills","projects","folders","files"];
+
+/* ========== helpers ========== */
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const pd=s=>new Date(s+"T00:00:00");
+const today=()=>ymd(new Date());
+const ym=d=>d.getFullYear()+"-"+pad(d.getMonth()+1);
+const addDays=(n,base)=>{const d=base?pd(base):new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+n);return ymd(d)};
+const daysTo=s=>s?Math.round((pd(s)-pd(today()))/864e5):null;
+const money=n=>(Number(n)||0).toLocaleString("en-US",{minimumFractionDigits:3,maximumFractionDigits:3});
+const M=n=>`<span class="num">${money(n)}</span> ر.ع`;
+const fdate=s=>s?`<span class="num">${s.replace(/-/g,"/")}</span>`:"—";
+const now=()=>Date.now();
+
+/* ========== storage (IndexedDB with memory fallback) ========== */
+const MEM={kv:{},files:{}};let IDB=null;
+function idbOpen(){return new Promise(res=>{try{const r=indexedDB.open("idarat-a3mali",1);r.onupgradeneeded=()=>{r.result.createObjectStore("kv");r.result.createObjectStore("files")};r.onsuccess=()=>{IDB=r.result;res()};r.onerror=()=>res()}catch(e){res()}})}
+function tx_(store,mode,fn){return new Promise((res,rej)=>{try{const t=IDB.transaction(store,mode),s=t.objectStore(store),r=fn(s);t.oncomplete=()=>res(r?r.result:undefined);t.onerror=()=>rej(t.error)}catch(e){rej(e)}})}
+async function kvGet(k){if(!IDB)return MEM.kv[k];try{return await tx_("kv","readonly",s=>s.get(k))}catch(e){return MEM.kv[k]}}
+async function kvSet(k,v){MEM.kv[k]=v;if(IDB)try{await tx_("kv","readwrite",s=>s.put(v,k))}catch(e){}}
+async function fileGet(id){if(MEM.files[id])return MEM.files[id];if(!IDB)return null;try{return await tx_("files","readonly",s=>s.get(id))}catch(e){return null}}
+async function filePut(id,b){MEM.files[id]=b;if(IDB)try{await tx_("files","readwrite",s=>s.put(b,id))}catch(e){}}
+async function fileDel(id){delete MEM.files[id];if(IDB)try{await tx_("files","readwrite",s=>s.delete(id))}catch(e){}}
+async function fileKeys(){if(!IDB)return Object.keys(MEM.files);try{return await tx_("files","readonly",s=>s.getAllKeys())}catch(e){return Object.keys(MEM.files)}}
+
+/* ========== state ========== */
+const S={db:null,local:{co:"all",theme:""},sync:{clientId:"",pass:"",connected:false,synced:[],lastSync:0},view:"home",f:{},token:null,tokenExp:0,syncState:"off"};
+function emptyDB(){return{v:1,companies:[],docs:[],employees:[],tx:[],bills:[],projects:[],folders:[],files:[],del:{},settings:{alertDays:60,guide:{},sector:"trade",u:0}}}
+function normalizeDB(db){const e=emptyDB();if(!db||typeof db!=="object")return e;for(const c of COLL)if(!Array.isArray(db[c]))db[c]=[];if(!db.del||typeof db.del!=="object")db.del={};
+  db.settings={...e.settings,...(db.settings||{})};if(!db.settings.guide||typeof db.settings.guide!=="object")db.settings.guide={};db.v=e.v;return db}
+function stripDemo(db){const r=normalizeDB(JSON.parse(JSON.stringify(db)));for(const c of COLL)r[c]=r[c].filter(x=>!String(x.id).startsWith("demo-"));delete r.demo;return r}
+async function save(){S.db.u=now();await kvSet("db",S.db);scheduleSync()}
+async function saveLocal(){await kvSet("local",S.local);await kvSet("sync",S.sync)}
+const focusP=()=>String(S.local.co||"").startsWith("p:")?S.local.co.slice(2):"";
+const projById=id=>S.db.projects.find(p=>p.id===id);
+function coOk(r){const c=S.local.co||"all";if(c==="all")return true;const pid=focusP();if(pid)return r.id===pid||r.projectId===pid;return r.companyId===c}
+const coList=()=>{const c=S.local.co||"all";if(c==="all")return S.db.companies;const pid=focusP();const cid=pid?(projById(pid)||{}).companyId:c;return S.db.companies.filter(x=>x.id===cid)};
+const scopeName=()=>{const c=S.local.co||"all";if(c==="all")return"كل الشركات والمشاريع";const pid=focusP();return pid?"مشروع «"+((projById(pid)||{}).name||"")+"»":coName(c)};
+function inAll(fn){const k=S.local.co;S.local.co="all";try{return fn()}finally{S.local.co=k}}
+const empOf=id=>S.db.employees.find(e=>e.id===id)||{};
+const projDocs=pid=>S.db.docs.filter(d=>d.projectId===pid||(d.ownerType==="employee"&&empOf(d.ownerId).projectId===pid));
+const coName=id=>(S.db.companies.find(c=>c.id===id)||{}).name||"—";
+const empName=id=>(S.db.employees.find(e=>e.id===id)||{}).name||"—";
+function upsert(coll,rec){rec.u=now();const a=S.db[coll],i=a.findIndex(x=>x.id===rec.id);if(i>=0)a[i]=rec;else a.push(rec);return rec}
+function remove(coll,id){S.db[coll]=S.db[coll].filter(x=>x.id!==id);S.db.del[id]=now()}
+
+/* document status */
+function docStatus(d){const n=daysTo(d.expiry);if(n===null)return{k:"",cls:"",txt:"بلا تاريخ انتهاء",n:9e9};
+  if(n<0)return{k:"expired",cls:"bad",txt:`منتهي منذ ${-n} يوم`,n};
+  if(n===0)return{k:"soon",cls:"bad",txt:"ينتهي اليوم",n};
+  if(n<=30)return{k:"soon",cls:"warn",txt:`باقٍ ${n} يوم`,n};
+  if(n<=(S.db.settings.alertDays||60))return{k:"upcoming",cls:"info",txt:`باقٍ ${n} يوم`,n};
+  return{k:"ok",cls:"ok",txt:"ساري",n}}
+const ownerLabel=d=>d.ownerType==="employee"?empName(d.ownerId):d.ownerType==="project"?"مشروع: "+((projById(d.projectId)||{}).name||"—"):coName(d.companyId);
+
+/* bills status for current month */
+function billStatus(b){const cur=ym(new Date());if(b.lastPaid===cur)return{k:"paid",cls:"ok",txt:"مدفوعة هذا الشهر"};
+  const day=new Date().getDate();const due=Math.min(+b.dueDay||1,28);
+  if(day>due)return{k:"overdue",cls:"bad",txt:`متأخرة منذ ${day-due} يوم`};
+  if(due-day<=5)return{k:"due",cls:"warn",txt:due===day?"تستحق اليوم":`تستحق بعد ${due-day} يوم`};
+  return{k:"later",cls:"",txt:`تستحق يوم ${due}`}}
+
+/* ========== demo data (fixed ids so devices don't duplicate) ========== */
+function seedDemo(){const db=emptyDB();db.demo=true;
+  const c1={id:"demo-c1",name:"شركة الأفق للتجارة (مثال)",cr:"1234567",tax:"OM1100223344",phone:"+968 9000 0000",address:"مسقط — الخوير",u:1};
+  const c2={id:"demo-c2",name:"مؤسسة النخبة للمقاولات (مثال)",cr:"7654321",tax:"OM1100998877",phone:"+968 9111 1111",address:"صحار",u:1};
+  db.companies=[c1,c2];
+  const D=(id,co,type,num,issueOff,expOff,ownerType="company",ownerId="")=>({id:"demo-d"+id,companyId:co,ownerType,ownerId,type,number:num,issue:addDays(issueOff),expiry:expOff===null?"":addDays(expOff),notes:"",files:[],u:1});
+  const e=[["e1","demo-c1","سالم الحارثي","عُماني","مدير مبيعات",650],["e2","demo-c1","راجيش كومار","هندي","محاسب",420],["e3","demo-c2","محمد أنور","بنغلاديشي","مشرف موقع",310],["e4","demo-c2","أحمد البلوشي","عُماني","مهندس مدني",900]];
+  db.employees=e.map(x=>({id:"demo-"+x[0],companyId:x[1],name:x[2],nationality:x[3],job:x[4],salary:x[5],phone:"",joinDate:addDays(-400),projectId:["e3","e4"].includes(x[0])?"demo-p1":"",u:1}));
+  db.docs=[D(1,"demo-c1","سجل تجاري","1234567",-345,20),D(2,"demo-c1","شهادة التسجيل الضريبي","OM1100223344",-200,165),D(3,"demo-c1","عقد إيجار المقر","L-2025-118",-370,-5),D(4,"demo-c1","رخصة بلدية","M-55821",-290,75),D(5,"demo-c2","سجل تجاري","7654321",-120,245),D(6,"demo-c2","عضوية غرفة التجارة والصناعة","CH-9921",-330,35),
+    D(7,"demo-c1","البطاقة الشخصية / بطاقة مقيم","—",-700,400,"employee","demo-e1"),D(8,"demo-c1","البطاقة الشخصية / بطاقة مقيم","R-88213",-690,12,"employee","demo-e2"),D(9,"demo-c1","جواز السفر","P-4412290",-900,1200,"employee","demo-e2"),D(10,"demo-c2","تصريح العمل (ملكية)","W-33018",-700,-12,"employee","demo-e3"),D(11,"demo-c2","البطاقة الشخصية / بطاقة مقيم","R-77102",-300,55,"employee","demo-e3"),D(12,"demo-c2","جواز السفر","P-9910021",-800,900,"employee","demo-e4")];
+  db.docs.push({...D(13,"demo-c2","عقد المشروع","CN-2026-04",-150,60,"project"),projectId:"demo-p1"},{...D(14,"demo-c2","تصريح بناء","BP-77120",-140,18,"project"),projectId:"demo-p1"},{...D(15,"demo-c2","كفالة بنكية (حسن تنفيذ / دفعة مقدمة)","BG-5521",-150,-3,"project"),projectId:"demo-p1"},{...D(16,"demo-c1","خطاب الترسية / أمر العمل","PO-3301",-20,null,"project"),projectId:"demo-p2"});
+  let k=0;const T=(co,kind,cat,amt,date,note,projectId="")=>db.tx.push({id:"demo-t"+(k++),companyId:co,kind,category:cat,amount:Math.round(amt*1000)/1000,date,note,projectId,u:1});
+  const base=new Date();base.setDate(1);
+  for(let m=5;m>=0;m--){const d=new Date(base.getFullYear(),base.getMonth()-m,1);const Y=d.getFullYear(),Mo=d.getMonth();const ds=day=>ymd(new Date(Y,Mo,day));
+    const lim=m===0?new Date().getDate():28;const w=(i)=>((i*37+m*53)%100)/100;
+    [3,9,15,21,26].forEach((dd,i)=>{if(dd<=lim)T("demo-c1","in","مبيعات",900+w(i)*1400,ds(dd),"مبيعات أسبوعية")});
+    if(lim>=12)T("demo-c2","in","دفعة مشروع",2200+w(7)*1800,ds(12),"دفعة مستخلص","demo-p1");
+    if(lim>=1)T("demo-c1","out","إيجار",450,ds(1),"إيجار المكتب");
+    if(lim>=10)T("demo-c1","out","كهرباء",70+w(2)*70,ds(10),"فاتورة الكهرباء");
+    if(lim>=12)T("demo-c1","out","ماء",22+w(3)*18,ds(12),"فاتورة الماء");
+    if(lim>=5)T("demo-c1","out","إنترنت واتصالات",30,ds(5),"الإنترنت");
+    if(lim>=25){T("demo-c1","out","رواتب",1070,ds(25),"رواتب الموظفين");T("demo-c2","out","رواتب",1210,ds(25),"رواتب الموظفين")}
+    if(lim>=17)T("demo-c2","out","مشتريات وبضاعة",600+w(5)*900,ds(17),"مواد بناء","demo-p1");
+    if(lim>=8)T("demo-c2","out","وقود ومواصلات",80+w(6)*60,ds(8),"وقود المركبات");}
+  const prev=ym(new Date(base.getFullYear(),base.getMonth()-1,1)),cur=ym(new Date());
+  db.bills=[{id:"demo-b1",companyId:"demo-c1",name:"إيجار المكتب",category:"إيجار",amount:450,dueDay:1,lastPaid:new Date().getDate()>=1?cur:prev,u:1},{id:"demo-b2",companyId:"demo-c1",name:"الكهرباء",category:"كهرباء",amount:110,dueDay:10,lastPaid:new Date().getDate()>=10?cur:prev,u:1},{id:"demo-b3",companyId:"demo-c1",name:"الماء",category:"ماء",amount:35,dueDay:12,lastPaid:prev,u:1},{id:"demo-b4",companyId:"demo-c1",name:"الإنترنت",category:"إنترنت واتصالات",amount:30,dueDay:5,lastPaid:new Date().getDate()>=5?cur:prev,u:1},{id:"demo-b5",companyId:"demo-c2",name:"إيجار المستودع",category:"إيجار",amount:300,dueDay:28,lastPaid:prev,u:1}];
+  db.projects=[{id:"demo-p1",companyId:"demo-c2",name:"فيلا سكنية — العذيبة",client:"عميل خاص",budget:9000,start:addDays(-150),end:addDays(60),status:"قيد التنفيذ",progress:65,u:1},{id:"demo-p2",companyId:"demo-c1",name:"توريد معدات مكتبية",client:"جهة حكومية",budget:4500,start:addDays(-20),end:addDays(40),status:"قيد التنفيذ",progress:30,u:1}];
+  db.folders=[{id:"demo-fo1",name:"عقود العملاء",companyId:"",parentId:"",u:1},{id:"demo-fo2",name:"فواتير الموردين",companyId:"demo-c1",parentId:"",u:1},{id:"demo-fo3",name:"عروض الأسعار",companyId:"",parentId:"",u:1},{id:"demo-fo4",name:"2026",companyId:"",parentId:"demo-fo2",u:1}];
+  db.settings.guide={g1:true,g2:true,g3:true};
+  return db}
+
+/* ========== image compression ========== */
+function compressImage(file){return new Promise(res=>{if(!file.type.startsWith("image/")||file.size<350000)return res(file);
+  const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{const mx=1800;let{width:w,height:h}=img;const r=Math.min(1,mx/Math.max(w,h));w=Math.round(w*r);h=Math.round(h*r);
+    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);URL.revokeObjectURL(url);
+    c.toBlob(b=>res(b&&b.size<file.size?new File([b],file.name.replace(/\.\w+$/,"")+".jpg",{type:"image/jpeg"}):file),"image/jpeg",.82)};
+  img.onerror=()=>{URL.revokeObjectURL(url);res(file)};img.src=url})}
+async function storeFiles(list){const out=[];for(const f of list){const b=await compressImage(f);const id="f"+uid();await filePut(id,b);out.push({id,name:f.name,mime:b.type||f.type,size:b.size})}return out}
+
+/* ========== UI primitives ========== */
+function toast(m,ms){document.querySelectorAll(".toast").forEach(x=>x.remove());const t=document.createElement("div");t.className="toast";t.textContent=m;t.setAttribute("role","status");document.body.appendChild(t);setTimeout(()=>t.remove(),ms||2800)}
+/* sharing: email, WhatsApp, AirDrop… via the system share sheet */
+S.blobs={};
+function fileName(f,b){let n=(f&&f.name)||"ملف";if(!/\.[a-z0-9]{2,4}$/i.test(n))n+=b.type==="application/pdf"?".pdf":".jpg";return n}
+async function docFiles(docs){const out=[];for(const d of docs)for(const f of d.files||[]){const b=S.blobs[f.id]||await getBlob(f.id);if(b){S.blobs[f.id]=b;const pre=docs.length>1?(ownerLabel(d)+" - "+d.type+" - "):"";out.push(new File([b],(pre+fileName(f,b)).replace(/[\\/:*?"<>|]/g,"-"),{type:b.type||"application/octet-stream"}))}}return out}
+function docText(d){return[d.type,"خاص بـ: "+ownerLabel(d),d.number?"الرقم: "+d.number:"",d.issue?"تاريخ الإصدار: "+d.issue:"",d.expiry?"تاريخ الانتهاء: "+d.expiry:"",d.notes?"ملاحظات: "+d.notes:""].filter(Boolean).join("\n")}
+function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+async function share({files=[],title="",text=""}){
+  try{if(files.length&&navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title,text});return true}
+      if(!files.length&&navigator.share){await navigator.share({title,text});return true}}
+  catch(e){if(e&&e.name==="AbortError")return true;if(e&&e.name==="NotAllowedError"&&files.length){toast("اضغط «مشاركة» مرة أخرى");return false}}
+  if(files.length){files.forEach(f=>dl(f,f.name));toast("المشاركة غير مدعومة في هذا المتصفح، تم تنزيل الملفات")}else copyText(text);return false}
+function shareSheet(title,text,files){S.shareData={title,text,files};modal(`<h2>${I.share.replace("<svg",'<svg width="20" height="20" style="vertical-align:-3px"')} جاهز للمشاركة</h2><p class="muted" style="margin:0;font-size:14px">${files.length?`${files.length} ملف`:"نص"} — اختر البريد أو واتساب أو AirDrop من قائمة المشاركة.</p><div class="list" style="font-size:13px">${files.slice(0,8).map(f=>`<div class="item" style="cursor:default;padding:6px 0"><span class="main"><span class="s">${esc(f.name)}</span></span><span class="muted num">${Math.max(1,Math.round(f.size/1024))} KB</span></div>`).join("")}${files.length>8?`<div class="muted">و${files.length-8} ملفات أخرى</div>`:""}</div><div class="row-end"><button class="btn ghost" data-act="close">إلغاء</button><span class="sp"></span><button class="btn primary" data-act="doShare">${I.share} مشاركة</button></div>`)}
+function modal(html,wide){closeModal();const s=document.createElement("div");s.className="scrim";s.id="scrim";s.innerHTML=`<div class="sheet${wide?" wide":""}" role="dialog" aria-modal="true">${html}</div>`;s.addEventListener("click",e=>{if(e.target===s)closeModal()});document.body.appendChild(s)}
+function closeModal(){const s=$("#scrim");if(s){s.querySelectorAll("[data-url]").forEach(x=>URL.revokeObjectURL(x.dataset.url));s.remove()}S.form=null}
+function ask(msg,fn,yes="تأكيد الحذف"){S.askFn=fn;modal(`<h2>تأكيد</h2><p style="margin:0">${esc(msg)}</p><div class="row-end"><span class="sp"></span><button class="btn ghost" data-act="close">إلغاء</button><button class="btn danger" data-act="askYes">${esc(yes)}</button></div>`)}
+
+function fieldHTML(f){const id="f_"+f.k,v=f.val??"";const req=f.req?" required":"";
+  const lab=`<label for="${id}">${esc(f.label)}${f.req?" *":""}</label>`;
+  if(f.type==="select")return`<div class="fld">${lab}<select id="${id}"${req}>${f.options.map(o=>{const[val,l]=Array.isArray(o)?o:[o,o];return`<option value="${esc(val)}"${String(val)===String(v)?" selected":""}>${esc(l)}</option>`}).join("")}</select></div>`;
+  if(f.type==="textarea")return`<div class="fld">${lab}<textarea id="${id}">${esc(v)}</textarea></div>`;
+  if(f.type==="files")return`<div class="fld"><label>المرفقات (PDF أو صور)</label><div class="row"><label class="btn sm" for="f_pick">${I.clip} اختيار ملف</label><input id="f_pick" type="file" accept="image/*,application/pdf" multiple hidden><label class="btn sm" for="f_cam">${I.cam} تصوير</label><input id="f_cam" type="file" accept="image/*" capture="environment" hidden></div><div id="f_names" class="muted" style="font-size:13px"></div></div>`;
+  if(f.type==="row")return`<div class="two">${f.items.map(fieldHTML).join("")}</div>`;
+  return`<div class="fld">${lab}<input id="${id}" type="${f.type||"text"}" value="${esc(v)}"${f.type==="number"?' step="any" inputmode="decimal"':""}${req}${f.ph?` placeholder="${esc(f.ph)}"`:""}></div>`}
+function openForm(o){S.pending=[];modal(`<h2>${esc(o.title)}</h2><form id="frm" class="form" novalidate>${o.fields.map(fieldHTML).join("")}<div class="row-end">${o.onDelete?'<button type="button" class="btn danger" data-act="formDel">حذف</button>':""}<span class="sp"></span><button type="button" class="btn ghost" data-act="close">إلغاء</button><button class="btn primary" type="submit">حفظ</button></div></form>`);S.form=o;
+  const first=$("#frm input:not([type=file]),#frm select");if(first&&window.matchMedia("(min-width:700px)").matches)first.focus()}
+function flatFields(fs){return fs.flatMap(f=>f.type==="row"?f.items:[f])}
+
+/* ========== layout ========== */
+const NAV=[["home","الرئيسية",I.home],["docs","المستندات",I.doc],["files","ملفاتي",I.folder],["money","المالية",I.wallet],["more","المزيد",I.more]];
+const ORDER=NAV.map(x=>x[0]);
+const RAIL=[["home","الرئيسية",I.home],["docs","المستندات",I.doc],["files","ملفاتي",I.folder],["emps","الموظفون",I.users],["money","المالية",I.wallet],["projects","المشاريع",I.brief],["reports","التقارير",I.chart],["advisor","المستشار الذكي",I.spark],["guide","دليل تأسيس المشروع",I.compass],["help","الدليل والمساعدة",I.help],["prefs","الشركات والإعدادات",I.gear]];
+const SYNC_TXT={off:"Drive غير متصل",on:"Drive متصل",busy:"جارٍ المزامنة…",err:"خطأ في المزامنة",wait:"Drive: اضغط للمزامنة"};
+const baseTab=v=>ORDER.includes(v)?v:"more";
+function render(){const v=S.view;{const c=S.local.co||"all";if(c!=="all"&&!(focusP()?projById(focusP()):S.db.companies.some(x=>x.id===c)))S.local.co="all"}
+  $("#app").innerHTML=`<header class="top"><div class="top-in"><div class="brand">إدارة أعمالي<small>المستندات · المالية · المشاريع</small></div><span class="sp"></span>
+  <select class="co-sel" id="coSel" aria-label="الشركة أو المشروع"><option value="all">كل الشركات والمشاريع</option>${S.db.companies.length?`<optgroup label="الشركات">${S.db.companies.map(c=>`<option value="${c.id}"${S.local.co===c.id?" selected":""}>${esc(c.name)}</option>`).join("")}</optgroup>`:""}${S.db.projects.length?`<optgroup label="المشاريع">${S.db.projects.map(p=>`<option value="p:${p.id}"${S.local.co==="p:"+p.id?" selected":""}>${esc(p.name)}</option>`).join("")}</optgroup>`:""}</select>
+  <button class="sync" data-act="syncBtn" title="حالة الاتصال بـ Google Drive"><span class="dot ${S.syncState==="on"?"on":S.syncState==="busy"?"busy":S.syncState==="err"?"err":""}"></span><span class="st">${SYNC_TXT[S.syncState]||""}</span></button>
+  <button class="hbtn" data-act="help" aria-label="شرح هذه الصفحة">${I.help}</button></div></header>
+  <div class="ptr" id="ptr" aria-hidden="true">${I.refresh}<span>اسحب للتحديث</span></div>
+  <div class="shell"><nav class="rail">${RAIL.map(([k,l,i])=>`<button data-go="${k}" class="${v===k?"on":""}">${i}${l}</button>`).join("")}</nav><main id="main" class="${S.anim?"anim-"+S.anim:""}">${tipBar(v)}${focusBar()}${(VIEWS[v]||VIEWS.home)()}</main></div>
+  <nav class="nav">${NAV.map(([k,l,i])=>`<button data-go="${k}" class="${baseTab(v)===k?"on":""}">${i}${l}</button>`).join("")}</nav>`;
+  S.anim="";afterRender()}
+function go(v,push=true){if(!VIEWS[v])v="home";if(v===S.view){window.scrollTo({top:0,behavior:"smooth"});return}
+  const a=ORDER.indexOf(baseTab(S.view)),b=ORDER.indexOf(baseTab(v));S.anim=a===b?"fade":(b>a?"next":"prev");
+  S.view=v;closeModal();if(push)try{history.pushState({v},"","#"+v)}catch(e){}render();window.scrollTo(0,0)}
+window.addEventListener("popstate",e=>{const v=(e.state&&e.state.v)||location.hash.slice(1)||"home";if(VIEWS[v]&&v!==S.view){S.anim="prev";S.view=v;closeModal();render();window.scrollTo(0,0)}});
+function focusBar(){if(S.view==="home"||S.view==="proj")return"";const c=S.local.co||"all";if(c==="all")return"";const pid=focusP();
+  return`<div class="focus">${pid?I.brief:I.building}<span class="sp">تعرض الآن: <b>${esc(scopeName())}</b> فقط</span>${pid?`<button class="btn sm" data-act="openProj" data-id="${pid}">صفحة المشروع</button>`:""}<button class="btn sm ghost" data-act="scopeAll">عرض الكل</button></div>`}
+function tipBar(v){const f=FEAT[v];if(!f||!f.tip||(S.local.tips||{})[v])return"";return`<div class="tip">${I.help}<div class="sp"><b>${esc(f.title)}</b>${esc(f.tip)} <button class="btn sm ghost" style="padding:2px 8px;margin-top:4px" data-act="help">اشرح لي خطوة بخطوة</button></div><button class="x" data-act="hideTip" data-v="${v}" aria-label="إخفاء">×</button></div>`}
+function afterRender(){document.querySelectorAll("[data-thumb]").forEach(async el=>{const b=await getBlob(el.dataset.thumb);if(b)S.blobs[el.dataset.thumb]=b;if(b&&b.type.startsWith("image/")){const u=URL.createObjectURL(b);el.innerHTML=`<img src="${u}" alt="">`}})}
+const demoBar=()=>S.db.demo?`<div class="demo-note">${I.spark}<span class="sp">تعرض الصفحة بيانات تجريبية للتوضيح فقط، وليست بياناتك.</span><button class="btn sm" data-act="clearDemo">حذف البيانات التجريبية والبدء</button></div>`:"";
+
+/* ========== data selectors ========== */
+const docsF=()=>{const pid=focusP();return pid?projDocs(pid):S.db.docs.filter(coOk)};
+const txF=()=>S.db.tx.filter(coOk);
+function sumRange(a,b){let i=0,o=0;txF().forEach(t=>{if(t.date>=a&&t.date<=b){if(t.kind==="in")i+=+t.amount;else o+=+t.amount}});return{i,o,n:i-o}}
+function monthRange(off=0){const d=new Date();const s=new Date(d.getFullYear(),d.getMonth()+off,1),e=new Date(d.getFullYear(),d.getMonth()+off+1,0);return[ymd(s),ymd(e)]}
+function alertsList(){const docs=docsF().map(d=>({d,s:docStatus(d)})).filter(x=>["expired","soon","upcoming"].includes(x.s.k)).sort((a,b)=>a.s.n-b.s.n);return docs}
+
+/* ========== views ========== */
+const VIEWS={};
+function homeView(){const al=alertsList();const exp=al.filter(x=>x.s.k==="expired").length,soon=al.filter(x=>x.s.k==="soon").length;
+  const bills=S.db.bills.filter(coOk).map(b=>({b,s:billStatus(b)}));const od=bills.filter(x=>x.s.k==="overdue"),due=bills.filter(x=>x.s.k==="overdue"||x.s.k==="due");
+  const[a,b]=monthRange(0);const m=sumRange(a,b);const d=new Date();
+  return`${demoBar()}<div class="page-h"><div><h1>صباح العمل</h1><p>${d.toLocaleDateString("ar-OM",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} · نظرة عامة على كل شركاتك ومشاريعك</p></div></div>
+  <div class="grid g4">
+   <button class="stat ${exp?"bad":"ok"}" data-go="docs" data-filter="expired"><span class="lbl">مستندات منتهية</span><span class="val num">${exp}</span></button>
+   <button class="stat ${soon?"warn":"ok"}" data-go="docs" data-filter="soon"><span class="lbl">تنتهي خلال 30 يوم</span><span class="val num">${soon}</span></button>
+   <button class="stat ${od.length?"bad":"ok"}" data-go="money" data-tab="bills"><span class="lbl">فواتير متأخرة</span><span class="val num">${od.length}</span></button>
+   <button class="stat" data-go="emps"><span class="lbl">الموظفون</span><span class="val num">${S.db.employees.filter(coOk).length}</span></button></div>
+  <div class="quick"><button data-act="newDoc">${I.doc}مستند</button><button data-act="newLib">${I.folder}ملف</button><button data-act="newTx" data-kind="out">${I.out}مصروف</button><button data-act="newTx" data-kind="in">${I.in}دخل</button></div>
+  ${driveCard()}${guideCard()}
+  ${overviewHTML()}
+  <div class="grid g2">
+   <section class="panel"><h2>${I.bell.replace("<svg",'<svg width="18" height="18"')} التنبيهات</h2>${al.length?`<div class="list">${al.slice(0,7).map(({d,s})=>docItem(d,s)).join("")}</div>${al.length>7?`<button class="btn sm ghost" data-go="docs" data-filter="alerts">عرض الكل (${al.length})</button>`:""}`:`<div class="empty">لا توجد مستندات منتهية أو قريبة الانتهاء.</div>`}</section>
+   <section class="panel"><h2>هذا الشهر — ${MONTHS[d.getMonth()]}</h2>
+     <dl class="kv"><dt>الدخل</dt><dd class="amt-in">${M(m.i)}</dd><dt>المصروفات</dt><dd class="amt-out">${M(m.o)}</dd><dt>الصافي</dt><dd style="font-weight:700;color:var(${m.n>=0?"--ok":"--bad"})">${M(m.n)}</dd></dl>
+     <h3 style="font-size:14px;margin:16px 0 4px">فواتير تحتاج سداد</h3>${due.length?`<div class="list">${due.map(({b,s})=>billItem(b,s)).join("")}</div>`:`<div class="muted" style="font-size:13px">كل الفواتير الثابتة مسددة أو غير مستحقة بعد.</div>`}
+   </section></div>`};
+
+VIEWS.home=()=>inAll(homeView);
+function overviewHTML(){const st=d=>docStatus(d);const worst=a=>a.map(st).sort((x,y)=>x.n-y.n)[0];
+  const cos=S.db.companies.map(c=>{const cr=S.db.docs.filter(d=>d.companyId===c.id&&d.ownerType==="company"&&d.type==="سجل تجاري").sort((a,b)=>(b.expiry||"").localeCompare(a.expiry||""))[0];
+    const al=S.db.docs.filter(d=>d.companyId===c.id).map(st).filter(s=>["expired","soon"].includes(s.k)).length;const ne=S.db.employees.filter(e=>e.companyId===c.id).length;
+    return`<button class="ov-row" data-act="scopeTo" data-v="${c.id}" data-to="docs"><span class="ico">${I.building}</span><span class="main"><span class="t">${esc(c.name)}</span><div class="s">السجل التجاري: ${cr?(cr.expiry?fdate(cr.expiry):"بلا تاريخ"):"غير مسجل"} · ${ne} عامل${al?` · ${al} مستند يحتاج متابعة`:""}</div></span>${cr?`<span class="pill ${st(cr).cls}">${st(cr).txt}</span>`:`<span class="pill warn">أضف السجل</span>`}</button>`}).join("");
+  const prs=S.db.projects.map(p=>{const dl=daysTo(p.end);const w=worst(projDocs(p.id));const sp=projSpent(p);
+    return`<button class="ov-row" data-act="openProj" data-id="${p.id}"><span class="ico">${I.brief}</span><span class="main"><span class="t">${esc(p.name)}</span><div class="s">${esc(coName(p.companyId))} · الإنجاز <span class="num">${+p.progress||0}%</span>${p.budget?` · الميزانية <span class="num">${Math.round(sp/p.budget*100)}%</span>`:""}</div></span><span class="mini">${p.end&&p.status!=="مكتمل"?`<span class="pill ${dl<0?"bad":dl<=14?"warn":"info"}">${dl<0?"متأخر "+(-dl)+" يوم":"التسليم بعد "+dl+" يوم"}</span>`:`<span class="pill ${p.status==="مكتمل"?"ok":""}">${esc(p.status||"")}</span>`}${w&&["expired","soon"].includes(w.k)?`<span class="pill ${w.cls}">مستند: ${w.txt}</span>`:""}</span></button>`}).join("");
+  const emps=S.db.employees.map(e=>({e,w:worst(S.db.docs.filter(d=>d.ownerType==="employee"&&d.ownerId===e.id)),miss:REQUIRED_EMP.filter(t=>!S.db.docs.some(d=>d.ownerId===e.id&&d.type===t)).length}));
+  const attn=emps.filter(x=>(x.w&&["expired","soon"].includes(x.w.k))||x.miss).sort((a,b)=>(a.w?a.w.n:9e9)-(b.w?b.w.n:9e9));
+  return`<section class="panel"><h2>${I.building.replace("<svg",'<svg width="18" height="18"')} الشركات والسجلات التجارية</h2>${cos?`<div class="list">${cos}</div>`:`<div class="empty">لا توجد شركات بعد. <button class="btn sm" data-act="newCo">أضف شركة</button></div>`}</section>
+  <section class="panel"><h2>${I.brief.replace("<svg",'<svg width="18" height="18"')} المشاريع</h2>${prs?`<div class="list">${prs}</div>`:`<div class="empty">لا توجد مشاريع بعد. <button class="btn sm" data-act="newProj">أضف مشروعًا</button></div>`}</section>
+  <section class="panel"><h2>${I.users.replace("<svg",'<svg width="18" height="18"')} العمال في كل الشركات <span class="sp"></span><span class="muted num" style="font-size:13px;font-weight:400">${S.db.employees.length} عامل</span></h2>
+   <div class="chips" style="margin-bottom:6px">${S.db.companies.map(c=>`<span class="pill">${esc(c.name)}: <span class="num">${S.db.employees.filter(e=>e.companyId===c.id).length}</span></span>`).join("")}</div>
+   ${attn.length?`<div class="list">${attn.slice(0,6).map(x=>`<button class="ov-row" data-act="openEmp" data-id="${x.e.id}"><span class="ico">${esc((x.e.name||"؟").trim()[0])}</span><span class="main"><span class="t">${esc(x.e.name)}</span><div class="s">${esc(coName(x.e.companyId))}${x.e.projectId?" · "+esc((projById(x.e.projectId)||{}).name||""):""}</div></span><span class="mini">${x.w&&["expired","soon"].includes(x.w.k)?`<span class="pill ${x.w.cls}">${x.w.txt}</span>`:""}${x.miss?`<span class="pill warn">ناقص ${x.miss}</span>`:""}</span></button>`).join("")}</div>`:`<div class="muted" style="font-size:13px">كل مستندات العمال سارية ومكتملة.</div>`}</section>`}
+function docItem(d,s){s=s||docStatus(d);const att=(d.files||[]).length;return`<button class="item" data-act="openDoc" data-id="${d.id}"><span class="ico">${d.ownerType==="employee"?I.users:d.ownerType==="project"?I.brief:I.building}</span><span class="main"><span class="t">${esc(d.type)}</span><div class="s">${esc(ownerLabel(d))}${d.number?" · <span class=num>"+esc(d.number)+"</span>":""}${att?" · 📎 "+att:""}</div></span><span class="pill ${s.cls}">${s.txt}</span></button>`}
+function billItem(b,s){s=s||billStatus(b);return`<div class="item" style="cursor:default"><span class="ico">${I.bolt}</span><span class="main"><span class="t">${esc(b.name)}</span><div class="s">${M(b.amount)} · ${esc(coName(b.companyId))}</div></span>${s.k==="paid"?`<span class="pill ok">${s.txt}</span>`:`<span class="pill ${s.cls}">${s.txt}</span><button class="btn sm primary" data-act="payBill" data-id="${b.id}">سداد</button>`}<button class="btn sm ghost" data-act="editBill" data-id="${b.id}" aria-label="تعديل">✎</button></div>`}
+
+VIEWS.docs=()=>{const f=S.f.docs||(S.f.docs={who:"all",st:"all",q:""});
+  let list=docsF().map(d=>({d,s:docStatus(d)}));
+  if(f.who!=="all")list=list.filter(x=>x.d.ownerType===f.who);
+  if(f.st==="alerts")list=list.filter(x=>["expired","soon","upcoming"].includes(x.s.k));else if(f.st!=="all")list=list.filter(x=>x.s.k===f.st);
+  if(f.q){const q=f.q.toLowerCase();list=list.filter(x=>(x.d.type+" "+x.d.number+" "+ownerLabel(x.d)+" "+x.d.notes).toLowerCase().includes(q))}
+  list.sort((a,b)=>a.s.n-b.s.n);S.docList=list.map(x=>x.d);
+  const ch=(k,v,l)=>`<button class="chip${f[k]===v?" on":""}" data-act="docF" data-k="${k}" data-v="${v}">${l}</button>`;
+  return`${demoBar()}<div class="page-h"><div><h1>المستندات</h1><p>سجلات الشركة ومستندات العمال مرتبة حسب أقرب تاريخ انتهاء.</p></div><span class="sp"></span>${list.some(x=>(x.d.files||[]).length)?`<button class="btn" data-act="shareList">${I.share} مشاركة المعروض</button>`:""}<button class="btn primary" data-act="newDoc">${I.plus} مستند جديد</button></div>
+  <input class="search" id="docQ" type="search" placeholder="ابحث برقم المستند أو النوع أو الاسم…" value="${esc(f.q)}">
+  <div class="chips">${ch("who","all","الكل")}${ch("who","company","مستندات الشركة")}${ch("who","employee","مستندات العمال")}${ch("who","project","مستندات المشاريع")}</div>
+  <div class="chips">${ch("st","all","كل الحالات")}${ch("st","expired","منتهية")}${ch("st","soon","خلال 30 يوم")}${ch("st","upcoming","قريبة")}${ch("st","ok","سارية")}</div>
+  <section class="panel">${list.length?`<div class="list">${list.map(x=>docItem(x.d,x.s)).join("")}</div>`:`<div class="empty">لا توجد مستندات مطابقة. أضف السجل التجاري أو بطاقة عامل من زر «مستند جديد».</div>`}</section>`};
+
+VIEWS.emps=()=>{const q=(S.f.empQ||"").toLowerCase();const list=S.db.employees.filter(coOk).filter(e=>!q||(e.name+e.job+e.nationality).toLowerCase().includes(q));
+  return`${demoBar()}<div class="page-h"><div><h1>الموظفون</h1><p>ملف لكل عامل مع مستنداته وتواريخ انتهائها.</p></div><span class="sp"></span><button class="btn primary" data-act="newEmp">${I.plus} موظف جديد</button></div>
+  <input class="search" id="empQ" type="search" placeholder="ابحث بالاسم أو الوظيفة…" value="${esc(S.f.empQ||"")}">
+  <section class="panel">${list.length?`<div class="list">${list.map(e=>{const ds=S.db.docs.filter(d=>d.ownerType==="employee"&&d.ownerId===e.id).map(docStatus).sort((a,b)=>a.n-b.n);const w=ds[0];const miss=REQUIRED_EMP.filter(t=>!S.db.docs.some(d=>d.ownerId===e.id&&d.type===t)).length;
+    return`<button class="item" data-act="openEmp" data-id="${e.id}"><span class="ico">${esc(e.name.trim()[0]||"؟")}</span><span class="main"><span class="t">${esc(e.name)}</span><div class="s">${esc(e.job||"")} · ${esc(e.nationality||"")} · ${esc(coName(e.companyId))}</div></span>${miss?`<span class="pill warn">ناقص ${miss}</span>`:""}${w&&w.k!=="ok"?`<span class="pill ${w.cls}">${w.txt}</span>`:`<span class="pill ok">${ds.length} مستند</span>`}</button>`}).join("")}</div>`:`<div class="empty">لا يوجد موظفون بعد.</div>`}</section>`};
+
+VIEWS.money=()=>{const tab=S.f.moneyTab||"tx";const tabs=`<div class="chips"><button class="chip${tab==="tx"?" on":""}" data-act="mTab" data-v="tx">الحركات المالية</button><button class="chip${tab==="bills"?" on":""}" data-act="mTab" data-v="bills">الالتزامات الشهرية</button></div>`;
+  const head=`${demoBar()}<div class="page-h"><div><h1>المالية</h1><p>الدخل والمصروفات والإيجارات والماء والكهرباء.</p></div><span class="sp"></span><button class="btn" data-act="newTx" data-kind="in">${I.in} دخل</button><button class="btn primary" data-act="newTx" data-kind="out">${I.out} مصروف</button></div>${tabs}`;
+  if(tab==="bills"){const bills=S.db.bills.filter(coOk);const tot=bills.reduce((s,b)=>s+ +b.amount,0);
+    return head+`<section class="panel"><h2>الالتزامات الثابتة <span class="sp"></span><button class="btn sm" data-act="newBill">${I.plus} التزام</button></h2><p class="muted" style="margin:0 0 6px;font-size:13px">المجموع الشهري: ${M(tot)}. زر «سداد» يسجل المصروف تلقائيًا.</p>${bills.length?`<div class="list">${bills.map(b=>billItem(b)).join("")}</div>`:`<div class="empty">أضف الإيجار والكهرباء والماء والإنترنت لتصلك تنبيهات السداد.</div>`}</section>`}
+  const mo=S.f.txMonth||ym(new Date());const[y,m]=mo.split("-").map(Number);const a=ymd(new Date(y,m-1,1)),b=ymd(new Date(y,m,0));
+  const list=txF().filter(t=>t.date>=a&&t.date<=b).sort((x,z)=>z.date.localeCompare(x.date));const s=sumRange(a,b);
+  const groups={};list.forEach(t=>(groups[t.date]=groups[t.date]||[]).push(t));
+  return head+`<div class="row"><button class="btn sm" data-act="txMon" data-d="-1" aria-label="الشهر السابق">→</button><strong style="min-width:120px;text-align:center">${MONTHS[m-1]} <span class="num">${y}</span></strong><button class="btn sm" data-act="txMon" data-d="1" aria-label="الشهر التالي">←</button></div>
+  <div class="grid g4"><div class="stat ok"><span class="lbl">الدخل</span><span class="val">${M(s.i)}</span></div><div class="stat"><span class="lbl">المصروفات</span><span class="val">${M(s.o)}</span></div><div class="stat ${s.n>=0?"ok":"bad"}"><span class="lbl">الصافي</span><span class="val">${M(s.n)}</span></div></div>
+  <section class="panel">${list.length?Object.keys(groups).map(d=>`<div class="muted" style="font-size:12px;margin-top:8px">${fdate(d)}</div><div class="list">${groups[d].map(t=>`<button class="item" data-act="editTx" data-id="${t.id}"><span class="ico" style="color:var(${t.kind==="in"?"--ok":"--muted"})">${t.kind==="in"?I.in:I.out}</span><span class="main"><span class="t">${esc(t.category)}</span><div class="s">${esc(t.note||"")}${t.note?" · ":""}${esc(coName(t.companyId))}${t.projectId?" · "+esc((S.db.projects.find(p=>p.id===t.projectId)||{}).name||""):""}</div></span><span class="${t.kind==="in"?"amt-in":"amt-out"}">${t.kind==="in"?"+":"−"}${M(t.amount)}</span></button>`).join("")}</div>`).join(""):`<div class="empty">لا توجد حركات في هذا الشهر.</div>`}</section>`};
+
+function projSpent(p){return S.db.tx.filter(t=>t.projectId===p.id&&t.kind==="out").reduce((s,t)=>s+ +t.amount,0)}
+function projIn(p){return S.db.tx.filter(t=>t.projectId===p.id&&t.kind==="in").reduce((s,t)=>s+ +t.amount,0)}
+VIEWS.projects=()=>{const list=S.db.projects.filter(coOk);
+  return`${demoBar()}<div class="page-h"><div><h1>المشاريع</h1><p>الميزانية والمصروف الفعلي ونسبة الإنجاز لكل مشروع.</p></div><span class="sp"></span><button class="btn primary" data-act="newProj">${I.plus} مشروع جديد</button></div>
+  <div class="grid g2">${list.length?list.map(p=>{const sp=projSpent(p),inc=projIn(p),pct=p.budget?Math.min(100,sp/p.budget*100):0;const dl=daysTo(p.end);const cls=pct>=100?"bad":pct>=85?"warn":"";
+   return`<section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row"><h2 style="margin:0;flex:1;min-width:0"><button data-act="openProj" data-id="${p.id}" style="all:unset;cursor:pointer">${esc(p.name)}</button></h2><span class="pill ${p.status==="مكتمل"?"ok":p.status==="متوقف"?"bad":"info"}">${esc(p.status)}</span></div>
+   <div class="muted" style="font-size:13px">${esc(p.client||"")} · ${esc(coName(p.companyId))}${p.end?` · ${dl>=0?"باقٍ "+dl+" يوم":"تجاوز الموعد "+(-dl)+" يوم"}`:""}</div>
+   <div><div class="row" style="font-size:13px"><span>الإنجاز</span><span class="sp"></span><span class="num">${+p.progress||0}%</span></div><div class="bar"><i style="width:${+p.progress||0}%"></i></div></div>
+   <div><div class="row" style="font-size:13px"><span>المصروف من الميزانية</span><span class="sp"></span>${M(sp)} / ${M(p.budget)}</div><div class="bar"><i class="${cls}" style="width:${pct}%"></i></div></div>
+   <div class="row" style="font-size:13px"><span class="muted">المقبوض من العميل:</span> ${M(inc)}<span class="sp"></span><button class="btn sm ghost" data-act="editProj" data-id="${p.id}">تعديل</button><button class="btn sm primary" data-act="openProj" data-id="${p.id}">فتح المشروع</button></div></section>`}).join(""):`<section class="panel"><div class="empty">لا توجد مشاريع بعد.</div></section>`}</div>`};
+
+VIEWS.proj=()=>{const p=projById(S.f.proj)||projById(focusP())||S.db.projects[0];
+  if(!p)return`<div class="page-h"><div><h1>المشروع</h1></div></div><section class="panel"><div class="empty">لا توجد مشاريع بعد. <button class="btn sm primary" data-act="newProj">أضف مشروعًا</button></div></section>`;
+  S.f.proj=p.id;const sp=projSpent(p),inc=projIn(p),pct=p.budget?Math.min(100,sp/p.budget*100):0,dl=daysTo(p.end);
+  const docs=projDocs(p.id).map(d=>({d,s:docStatus(d)})).sort((a,b)=>a.s.n-b.s.n);const files=S.db.files.filter(f=>f.projectId===p.id).sort((a,b)=>(b.u||0)-(a.u||0));
+  const emps=S.db.employees.filter(e=>e.projectId===p.id);const tx=S.db.tx.filter(t=>t.projectId===p.id).sort((a,b)=>b.date.localeCompare(a.date));const focused=focusP()===p.id;
+  return`${demoBar()}${S.db.projects.length>1?`<div class="chips">${S.db.projects.map(x=>`<button class="chip${x.id===p.id?" on":""}" data-act="openProj" data-id="${x.id}">${esc(x.name)}</button>`).join("")}</div>`:""}
+  <div class="page-h"><div style="min-width:0"><h1>${esc(p.name)}</h1><p>${esc(p.client||"")}${p.client?" · ":""}${esc(coName(p.companyId))} · <span class="pill ${p.status==="مكتمل"?"ok":p.status==="متوقف"?"bad":"info"}">${esc(p.status||"")}</span></p></div><span class="sp"></span>
+   <button class="btn" data-act="editProj" data-id="${p.id}">تعديل</button>${focused?`<button class="btn" data-act="scopeAll">عرض كل المشاريع</button>`:`<button class="btn primary" data-act="scopeTo" data-v="p:${p.id}">متابعة هذا المشروع فقط</button>`}</div>
+  <div class="grid g4"><div class="stat"><span class="lbl">الإنجاز</span><span class="val num">${+p.progress||0}%</span></div><div class="stat ${pct>=100?"bad":pct>=85?"warn":""}"><span class="lbl">المصروف من الميزانية</span><span class="val">${M(sp)}</span><span class="muted" style="font-size:12px">من ${M(p.budget)}</span></div><div class="stat ok"><span class="lbl">المقبوض من العميل</span><span class="val">${M(inc)}</span></div><div class="stat ${p.end&&dl<0&&p.status!=="مكتمل"?"bad":""}"><span class="lbl">التسليم</span><span class="val" style="font-size:17px">${p.end?(dl>=0?"بعد "+dl+" يوم":"متأخر "+(-dl)+" يوم"):"—"}</span></div></div>
+  <section class="panel"><h2>مستندات المشروع <span class="sp"></span><button class="btn sm primary" data-act="newProjDoc" data-id="${p.id}">${I.plus} مستند</button></h2>${docs.length?`<div class="list">${docs.map(x=>docItem(x.d,x.s)).join("")}</div>`:`<div class="empty">أضف عقد المشروع وتصريح البناء والكفالات مع تواريخ انتهائها.</div>`}</section>
+  <div class="grid g2"><section class="panel"><h2>ملفات المشروع <span class="sp"></span><button class="btn sm" data-act="newLibProj" data-id="${p.id}">${I.plus} ملف</button></h2>${files.length?`<div class="list">${files.slice(0,8).map(x=>`<button class="item" data-act="openLib" data-id="${x.id}"><span class="ico">${fIcon(x.meta&&x.meta.mime)}</span><span class="main"><span class="t">${esc(x.name)}</span><div class="s">${fdate(x.date)}${x.folderId?" · "+esc(folderName(x.folderId)):""}</div></span></button>`).join("")}</div>`:`<div class="empty">المخططات والصور والمستخلصات… تظهر هنا.</div>`}</section>
+  <section class="panel"><h2>العمال في المشروع</h2>${emps.length?`<div class="list">${emps.map(e=>`<button class="item" data-act="openEmp" data-id="${e.id}"><span class="ico">${esc((e.name||"؟").trim()[0])}</span><span class="main"><span class="t">${esc(e.name)}</span><div class="s">${esc(e.job||"")}</div></span></button>`).join("")}</div>`:`<div class="empty">اربط العمال بالمشروع من «تعديل البيانات» في ملف كل عامل.</div>`}</section></div>
+  <section class="panel"><h2>الحركات المالية <span class="sp"></span><button class="btn sm" data-act="newTx" data-kind="in" data-proj="${p.id}">${I.in} دفعة</button><button class="btn sm primary" data-act="newTx" data-kind="out" data-proj="${p.id}">${I.out} مصروف</button></h2>${tx.length?`<div class="list">${tx.slice(0,10).map(t=>`<button class="item" data-act="editTx" data-id="${t.id}"><span class="ico">${t.kind==="in"?I.in:I.out}</span><span class="main"><span class="t">${esc(t.category)}</span><div class="s">${fdate(t.date)}${t.note?" · "+esc(t.note):""}</div></span><span class="${t.kind==="in"?"amt-in":"amt-out"}">${t.kind==="in"?"+":"−"}${M(t.amount)}</span></button>`).join("")}</div>`:`<div class="empty">لا توجد حركات لهذا المشروع.</div>`}</section>`};
+
+/* reports */
+function buckets(per){const out=[];const d=new Date();d.setHours(0,0,0,0);
+  if(per==="day"){for(let i=13;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);const s=ymd(x);out.push({l:String(x.getDate()),a:s,b:s})}}
+  else if(per==="week"){const st=new Date(d);st.setDate(d.getDate()-d.getDay());for(let i=7;i>=0;i--){const a=new Date(st);a.setDate(st.getDate()-7*i);const b=new Date(a);b.setDate(a.getDate()+6);out.push({l:a.getDate()+"/"+(a.getMonth()+1),a:ymd(a),b:ymd(b)})}}
+  else if(per==="month"){for(let i=11;i>=0;i--){const a=new Date(d.getFullYear(),d.getMonth()-i,1),b=new Date(d.getFullYear(),d.getMonth()-i+1,0);out.push({l:MONTHS[a.getMonth()],a:ymd(a),b:ymd(b)})}}
+  else{for(let i=4;i>=0;i--){const y=d.getFullYear()-i;out.push({l:String(y),a:y+"-01-01",b:y+"-12-31"})}}
+  return out.map(x=>({...x,...sumRange(x.a,x.b)}))}
+function niceMax(v){if(v<=0)return 100;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;return(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p}
+function barChart(bk){const W=640,H=240,L=56,R=10,T=12,B=28;const mx=niceMax(Math.max(...bk.map(b=>Math.max(b.i,b.o)),1));const iw=W-L-R,ih=H-T-B;const bw=iw/bk.length;const g=Math.max(2,bw*.14);const w=(bw-g*3)/2;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="الدخل والمصروفات" style="direction:ltr">`;
+  for(let k=0;k<=4;k++){const v=mx*k/4,y=T+ih-ih*k/4;s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--muted)">${v>=1000?(v/1000).toLocaleString("en-US",{maximumFractionDigits:1})+"k":Math.round(v)}</text>`}
+  bk.forEach((b,i)=>{const x=L+i*bw+g;const hi=ih*b.i/mx,ho=ih*b.o/mx;
+    s+=`<rect x="${x}" y="${T+ih-hi}" width="${w}" height="${Math.max(hi,0)}" rx="2" fill="var(--brand)"><title>دخل ${money(b.i)}</title></rect><rect x="${x+w+g}" y="${T+ih-ho}" width="${w}" height="${Math.max(ho,0)}" rx="2" fill="var(--accent)"><title>مصروف ${money(b.o)}</title></rect><text x="${L+i*bw+bw/2}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(b.l)}</text>`});
+  return s+`</svg>`}
+VIEWS.reports=()=>{const per=S.f.per||"month";const bk=buckets(per);const cur=bk[bk.length-1],prev=bk[bk.length-2]||{i:0,o:0,n:0};
+  const names={day:["يومي","اليوم","أمس"],week:["أسبوعي","هذا الأسبوع","الأسبوع الماضي"],month:["شهري","هذا الشهر","الشهر الماضي"],year:["سنوي","هذه السنة","السنة الماضية"]};
+  const cats={};txF().forEach(t=>{if(t.kind==="out"&&t.date>=cur.a&&t.date<=cur.b)cats[t.category]=(cats[t.category]||0)+ +t.amount});const ce=Object.entries(cats).sort((a,b)=>b[1]-a[1]);const ct=ce.reduce((s,x)=>s+x[1],0);
+  const byCo=coList().map(c=>{let i=0,o=0;S.db.tx.forEach(t=>{if(t.companyId===c.id&&t.date>=cur.a&&t.date<=cur.b){t.kind==="in"?i+=+t.amount:o+=+t.amount}});return{c,i,o}});
+  const ch=v=>`<button class="chip${per===v?" on":""}" data-act="per" data-v="${v}">${names[v][0]}</button>`;
+  const delta=(a,b)=>b?` <span class="muted" style="font-size:12px">(${a>=b?"+":""}${Math.round((a-b)/b*100)}% عن ${names[per][2]})</span>`:"";
+  return`${demoBar()}<div class="page-h"><div><h1>التقارير</h1><p>تتبع الأداء يوميًا وأسبوعيًا وشهريًا وسنويًا.</p></div><span class="sp"></span><button class="btn sm" data-act="copyReport">نسخ</button><button class="btn sm primary" data-act="shareReport">${I.share} مشاركة التقرير</button></div>
+  <div class="chips">${ch("day")}${ch("week")}${ch("month")}${ch("year")}</div>
+  <div class="grid g4"><div class="stat ok"><span class="lbl">دخل ${names[per][1]}</span><span class="val">${M(cur.i)}</span>${delta(cur.i,prev.i)}</div><div class="stat"><span class="lbl">مصروف ${names[per][1]}</span><span class="val">${M(cur.o)}</span>${delta(cur.o,prev.o)}</div><div class="stat ${cur.n>=0?"ok":"bad"}"><span class="lbl">الصافي</span><span class="val">${M(cur.n)}</span></div><div class="stat"><span class="lbl">هامش الربح</span><span class="val num">${cur.i?Math.round(cur.n/cur.i*100):0}%</span></div></div>
+  <section class="panel"><h2>الدخل مقابل المصروفات</h2><div class="chart-wrap">${barChart(bk)}</div><div class="legend"><span><i style="background:var(--brand)"></i>الدخل</span><span><i style="background:var(--accent)"></i>المصروفات</span></div></section>
+  <div class="grid g2"><section class="panel"><h2>توزيع المصروفات — ${names[per][1]}</h2>${ce.length?ce.map(([k,v])=>`<div style="margin-bottom:10px"><div class="row" style="font-size:13.5px"><span>${esc(k)}</span><span class="sp"></span>${M(v)} <span class="muted num">${Math.round(v/ct*100)}%</span></div><div class="bar"><i style="width:${v/ce[0][1]*100}%;background:var(--accent)"></i></div></div>`).join(""):`<div class="empty">لا مصروفات في هذه الفترة.</div>`}</section>
+  <section class="panel"><h2>حسب الشركة</h2>${byCo.length?`<div class="list">${byCo.map(x=>`<div class="item" style="cursor:default"><span class="ico">${I.building}</span><span class="main"><span class="t">${esc(x.c.name)}</span><div class="s">دخل ${M(x.i)} · مصروف ${M(x.o)}</div></span><strong style="color:var(${x.i-x.o>=0?"--ok":"--bad"})">${M(x.i-x.o)}</strong></div>`).join("")}</div>`:`<div class="empty">أضف شركة من الإعدادات.</div>`}</section></div>`};
+
+/* advisors */
+function finInsights(){const out=[];const[a,b]=monthRange(0),[pa,pb]=monthRange(-1);const c=sumRange(a,b),p=sumRange(pa,pb);
+  const day=new Date().getDate(),dim=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  if(c.i||c.o){if(c.o>c.i)out.push(["bad","المصروفات تتجاوز الدخل هذا الشهر",`العجز حاليًا ${money(c.o-c.i)} ر.ع. راجع البنود الأكبر أو أجّل المشتريات غير الضرورية حتى يتحسن الدخل.`]);
+    else out.push(["ok",`هامش الربح هذا الشهر ${c.i?Math.round(c.n/c.i*100):0}%`,`الصافي ${money(c.n)} ر.ع حتى اليوم ${day} من ${dim}. هامش فوق 20% يعتبر صحيًا لمعظم الأنشطة التجارية الصغيرة.`])}
+  if(p.o&&c.o){const proj=c.o/day*dim;const ch=(proj-p.o)/p.o*100;if(ch>15)out.push(["warn",`المصروفات تسير نحو زيادة ${Math.round(ch)}%`,`بالوتيرة الحالية سيصل مصروف الشهر إلى نحو ${money(proj)} ر.ع مقابل ${money(p.o)} الشهر الماضي.`])}
+  const cats={};txF().forEach(t=>{if(t.kind==="out"&&t.date>=pa&&t.date<=b)cats[t.category]=(cats[t.category]||0)+ +t.amount});const tot=Object.values(cats).reduce((s,x)=>s+x,0);const top=Object.entries(cats).sort((x,y)=>y[1]-x[1])[0];
+  if(top&&tot&&top[1]/tot>.4)out.push(["warn",`«${top[0]}» تستهلك ${Math.round(top[1]/tot*100)}% من المصروفات`,`تركّز المصروف في بند واحد يرفع المخاطرة. ابحث عن بدائل أو تفاوض على السعر في هذا البند أولًا.`]);
+  const od=S.db.bills.filter(coOk).filter(x=>billStatus(x).k==="overdue");if(od.length)out.push(["bad",`${od.length} فاتورة ثابتة متأخرة`,od.map(x=>x.name+" ("+money(x.amount)+")").join("، ")+". التأخير في الكهرباء والماء قد يسبب قطع الخدمة أو غرامات."]);
+  const fixed=S.db.bills.filter(coOk).reduce((s,x)=>s+ +x.amount,0);const sal=S.db.employees.filter(coOk).reduce((s,e)=>s+(+e.salary||0),0);
+  let inc3=0;for(let k=1;k<=3;k++){const[x,y]=monthRange(-k);inc3+=sumRange(x,y).i}inc3/=3;
+  if(fixed+sal)out.push(["info",`الالتزامات الشهرية الثابتة ${money(fixed+sal)} ر.ع`,`تشمل الرواتب ${money(sal)} والفواتير ${money(fixed)}${inc3?`، وتمثل ${Math.round((fixed+sal)/inc3*100)}% من متوسط الدخل لآخر 3 أشهر`:""}. يُنصح باحتياطي نقدي يغطي 3 أشهر منها: ${money((fixed+sal)*3)} ر.ع.`]);
+  S.db.projects.filter(coOk).forEach(pr=>{const sp=projSpent(pr);if(pr.budget&&sp/pr.budget>=.85&&pr.status!=="مكتمل")out.push([sp>pr.budget?"bad":"warn",`مشروع «${pr.name}» استهلك ${Math.round(sp/pr.budget*100)}% من ميزانيته`,`نسبة الإنجاز ${pr.progress||0}% فقط. راجع التكاليف المتبقية قبل تجاوز الميزانية.`])});
+  if(!out.length)out.push(["info","لا توجد بيانات كافية بعد","سجّل الدخل والمصروفات لبضعة أسابيع ليبدأ المستشار بإعطاء توصيات دقيقة."]);return out}
+function fileInsights(){const out=[];const docs=docsF();const st=docs.map(d=>({d,s:docStatus(d)}));
+  const ex=st.filter(x=>x.s.k==="expired");if(ex.length)out.push(["bad",`${ex.length} مستند منتهي يحتاج تجديدًا فورًا`,ex.slice(0,5).map(x=>`${x.d.type} — ${ownerLabel(x.d)}`).join("، ")+". العمل بسجل أو تصريح منتهٍ قد يعرّض الشركة لمخالفات."]);
+  const so=st.filter(x=>x.s.k==="soon");if(so.length)out.push(["warn",`${so.length} مستند ينتهي خلال 30 يومًا`,so.slice(0,5).map(x=>`${x.d.type} — ${ownerLabel(x.d)} (${x.s.n} يوم)`).join("، ")+". ابدأ إجراءات التجديد الآن لتجنب التأخير."]);
+  S.db.employees.filter(coOk).forEach(e=>{const miss=REQUIRED_EMP.filter(t=>!S.db.docs.some(d=>d.ownerId===e.id&&d.type===t));if(miss.length)out.push(["warn",`ملف ${e.name} ناقص`,`لا يوجد: ${miss.join("، ")}.`])});
+  coList().forEach(c=>{const has=t=>S.db.docs.some(d=>d.companyId===c.id&&d.ownerType==="company"&&d.type===t);const miss=["سجل تجاري","شهادة التسجيل الضريبي"].filter(t=>!has(t));if(miss.length)out.push(["warn",`${c.name}: مستندات أساسية غير مسجلة`,miss.join("، ")+"."])});
+  const noAtt=docs.filter(d=>!(d.files||[]).length).length;if(noAtt)out.push(["info",`${noAtt} مستند بدون نسخة مرفقة`,"أرفق صورة أو PDF لكل مستند لتستخرجه بسرعة عند الحاجة من أي جهاز."]);
+  if(!out.length)out.push(["ok","الملفات مكتملة ومحدّثة","كل المستندات سارية ولها مرفقات."]);return out}
+function healthScore(){const docs=docsF();if(!docs.length)return 100;const ok=docs.filter(d=>{const k=docStatus(d).k;return k==="ok"||k===""||k==="upcoming"}).length;const att=docs.filter(d=>(d.files||[]).length).length;return Math.round((ok/docs.length)*80+(att/docs.length)*20)}
+const insHTML=a=>a.map(([c,t,s])=>`<div class="insight ${c}"><span class="mk"></span><div><div class="t">${esc(t)}</div><div class="s">${esc(s)}</div></div></div>`).join("");
+VIEWS.advisor=()=>{const sc=healthScore();const c=sc>=80?"--ok":sc>=55?"--warn":"--bad";
+  return`${demoBar()}<div class="page-h"><div><h1>المستشار الذكي</h1><p>تحليل تلقائي لبياناتك مع توصيات عملية. للأسئلة المفتوحة انسخ الملخص واسأل Claude.</p></div><span class="sp"></span><button class="btn accent" data-act="askClaude">${I.spark} نسخ ملخص لسؤال Claude</button></div>
+  <div class="grid g2"><section class="panel"><h2>${I.wallet.replace("<svg",'<svg width="18" height="18"')} المستشار المالي</h2>${insHTML(finInsights())}</section>
+  <section class="panel"><h2>${I.doc.replace("<svg",'<svg width="18" height="18"')} مستشار إدارة الملفات</h2><div class="score"><span class="big num" style="color:var(${c})">${sc}</span><div><div style="font-weight:600">مؤشر سلامة الملفات</div><div class="muted" style="font-size:13px">من 100 — يجمع صلاحية المستندات ووجود المرفقات.</div></div></div>${insHTML(fileInsights())}</section></div>`};
+
+VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span class="ico">${i}</span><span class="main"><span class="t">${t}</span><div class="s">${d}</div></span></button>`;
+  return`<div class="page-h"><div><h1>المزيد</h1><p>كل أقسام التطبيق في مكان واحد.</p></div></div>
+  <section class="panel"><div class="list">${it("emps",I.users,"الموظفون","ملف لكل عامل ومستنداته")}${it("projects",I.brief,"المشاريع","الميزانيات والإنجاز والمصروف الفعلي")}${it("reports",I.chart,"التقارير","يومي، أسبوعي، شهري، سنوي")}${it("advisor",I.spark,"المستشار الذكي","المستشار المالي ومستشار إدارة الملفات")}</div></section>
+  <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
+  <section class="panel"><div class="list">${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
+  <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
+const APP_VER="1.5";
+function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
+  <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
+  <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
+  <hr><div class="rl">تصميم وبرمجة تطبيق «إدارة أعمالي»</div><div class="rl en">Designer &amp; developer of “Idarat A'mali”</div>
+  <div class="rl" style="margin-top:4px">الإصدار <span class="num">${APP_VER}</span> · <span class="num">${new Date().getFullYear()}</span> ©</div></section>`}
+
+VIEWS.prefs=()=>{const sy=S.sync;
+  return`<div class="page-h"><div><h1>الشركات والإعدادات</h1><p>أضف شركاتك، واربط Google Drive، واضبط التنبيهات.</p></div></div>
+  <section class="panel drive ${sy.connected?"on":""}"><span class="ico">${I.cloud}</span><div class="sp"><b>${sy.connected?"متصل بـ Google Drive":"غير متصل بـ Google Drive"}</b><div class="muted" style="font-size:13px">${sy.connected?(sy.lastSync?"آخر مزامنة: "+new Date(sy.lastSync).toLocaleString("ar-OM"):""):"بياناتك محفوظة على هذا الجهاز فقط حتى تربط Drive."}</div></div></section>
+  <section class="panel"><h2>الشركات <span class="sp"></span><button class="btn sm primary" data-act="newCo">${I.plus} شركة</button></h2>${S.db.companies.length?`<div class="list">${S.db.companies.map(c=>`<button class="item" data-act="editCo" data-id="${c.id}"><span class="ico">${I.building}</span><span class="main"><span class="t">${esc(c.name)}</span><div class="s">س.ت <span class="num">${esc(c.cr||"—")}</span> · الرقم الضريبي <span class="num">${esc(c.tax||"—")}</span></div></span><span class="pill">${S.db.docs.filter(d=>d.companyId===c.id).length} مستند</span></button>`).join("")}</div>`:`<div class="empty">أضف شركتك الأولى للبدء.</div>`}</section>
+  <section class="panel"><h2>${I.cloud.replace("<svg",'<svg width="18" height="18"')} المزامنة مع Google Drive</h2>
+   <p class="muted" style="margin:0 0 10px;font-size:13.5px">تُحفظ نسخة مشفّرة من بياناتك ومرفقاتك في مجلد خاص بالتطبيق داخل Google Drive، فتعمل على الآيفون والماك وأي جهاز آخر. لا أحد يستطيع قراءتها بدون كلمة التشفير.</p>
+   <form id="syncForm" class="form"><div class="fld"><label for="s_cid">معرّف العميل (OAuth Client ID)</label><input id="s_cid" value="${esc(sy.clientId)}" placeholder="xxxx.apps.googleusercontent.com" dir="ltr"></div>
+   <div class="fld"><label for="s_pass">كلمة التشفير (نفسها على كل الأجهزة)</label><input id="s_pass" type="password" value="${esc(sy.pass)}" autocomplete="new-password"></div>
+   <div class="row-end"><button class="btn primary" type="submit">${sy.connected?"حفظ ومزامنة الآن":"ربط Google Drive"}</button>${sy.connected?'<button type="button" class="btn ghost" data-act="disconnect">فصل</button>':""}<span class="sp"></span><span class="muted" style="font-size:12.5px">${sy.lastSync?"آخر مزامنة: "+new Date(sy.lastSync).toLocaleString("ar-OM"):"لم تتم مزامنة بعد"}</span></div></form>
+   <details style="margin-top:10px;font-size:13.5px"><summary style="cursor:pointer;font-weight:600">طريقة الحصول على معرّف العميل (مرة واحدة)</summary><ol style="padding-inline-start:20px;margin:8px 0">
+    <li>افتح console.cloud.google.com وأنشئ مشروعًا جديدًا.</li><li>من «APIs & Services ← Library» فعّل <b>Google Drive API</b>.</li><li>من «OAuth consent screen» اختر External وأضف بريدك كمستخدم اختبار.</li><li>من «Credentials ← Create credentials ← OAuth client ID» اختر Web application، وأضف رابط موقعك على GitHub Pages في «Authorized JavaScript origins».</li><li>انسخ الـ Client ID والصقه هنا على كل جهاز، مع نفس كلمة التشفير.</li></ol></details>
+  </section>
+  <section class="panel"><h2>التنبيهات والمظهر</h2><div class="form"><div class="two"><div class="fld"><label for="s_alert">التنبيه قبل الانتهاء بـ (يوم)</label><input id="s_alert" type="number" value="${S.db.settings.alertDays||60}"></div>
+   <div class="fld"><label for="s_theme">المظهر</label><select id="s_theme"><option value="">حسب الجهاز</option><option value="light"${S.local.theme==="light"?" selected":""}>فاتح</option><option value="dark"${S.local.theme==="dark"?" selected":""}>داكن</option></select></div></div></div></section>
+  ${aboutPanel()}
+  <section class="panel"><h2>النسخ الاحتياطي</h2><p class="muted" style="margin:0 0 10px;font-size:13.5px">ملف واحد يحتوي كل البيانات والمرفقات، للاحتفاظ به أو نقله يدويًا.</p><div class="row"><button class="btn" data-act="exportBk">تصدير نسخة احتياطية</button><label class="btn" for="importBk">استيراد نسخة</label><input id="importBk" type="file" accept=".json,application/json" hidden><span class="sp"></span><button class="btn danger" data-act="wipe">مسح كل البيانات من هذا الجهاز</button></div></section>`};
+
+/* ========== forms ========== */
+const coOpts=()=>S.db.companies.map(c=>[c.id,c.name]);
+const defCo=()=>{const pid=focusP();if(pid)return(projById(pid)||{}).companyId||(S.db.companies[0]||{}).id;return S.local.co!=="all"?S.local.co:(S.db.companies[0]||{}).id};
+const projOpts=()=>[["","بدون مشروع"],...S.db.projects.map(p=>[p.id,p.name])];
+function needCo(){if(!S.db.companies.length){toast("أضف شركة أولًا");S.view="prefs";render();setTimeout(()=>act("newCo",{}),50);return true}return false}
+
+function formCo(c){c=c||{};openForm({title:c.id?"تعديل الشركة":"شركة جديدة",fields:[{k:"name",label:"اسم الشركة",req:1,val:c.name},{type:"row",items:[{k:"cr",label:"رقم السجل التجاري",val:c.cr},{k:"tax",label:"الرقم الضريبي",val:c.tax}]},{type:"row",items:[{k:"phone",label:"الهاتف",val:c.phone},{k:"address",label:"العنوان",val:c.address}]}],
+  onSave:async v=>{upsert("companies",{...c,...v,id:c.id||uid()});await save();closeModal();render();toast("تم الحفظ")},
+  onDelete:c.id&&(()=>ask("حذف الشركة وكل مستنداتها وموظفيها وحركاتها؟",async()=>{["docs","employees","tx","bills","projects"].forEach(k=>S.db[k].filter(x=>x.companyId===c.id).forEach(x=>remove(k,x.id)));remove("companies",c.id);if(S.local.co===c.id)S.local.co="all";await save();await saveLocal();closeModal();render()}))})}
+
+function formDoc(d,preset){if(needCo())return;d=d||{};preset=preset||{};const ot0=d.ownerType||preset.ownerType||(focusP()?"project":"company");const typesFor=t=>t==="employee"?EMP_DOC_TYPES:t==="project"?PROJ_DOC_TYPES:CO_DOC_TYPES;
+  const empOpts=S.db.employees.map(e=>[e.id,e.name+" — "+coName(e.companyId)]);
+  openForm({title:d.id?"تعديل المستند":"مستند جديد",fields:[
+   {k:"ownerType",label:"المستند خاص بـ",type:"select",options:[["company","الشركة"],["employee","موظف"],["project","مشروع"]],val:ot0},
+   {k:"companyId",label:"الشركة",type:"select",options:coOpts(),val:d.companyId||preset.companyId||defCo()},
+   {k:"ownerId",label:"الموظف",type:"select",options:empOpts.length?empOpts:[["","لا يوجد موظفون"]],val:d.ownerId||preset.ownerId||""},
+   {k:"projectId",label:"المشروع",type:"select",options:projOpts(),val:d.projectId??preset.projectId??focusP()},
+   {k:"type",label:"نوع المستند",type:"select",options:typesFor(ot0),val:d.type},
+   {k:"number",label:"رقم المستند",val:d.number},
+   {type:"row",items:[{k:"issue",label:"تاريخ الإصدار",type:"date",val:d.issue},{k:"expiry",label:"تاريخ الانتهاء",type:"date",val:d.expiry}]},
+   {k:"notes",label:"ملاحظات",type:"textarea",val:d.notes},...(d.id?[]:[{type:"files"}])],
+   onSave:async(v)=>{if(v.ownerType==="employee"){if(!v.ownerId)return toast("اختر الموظف");v.companyId=(S.db.employees.find(e=>e.id===v.ownerId)||{}).companyId||v.companyId}else v.ownerId="";
+     if(v.ownerType==="project"){if(!v.projectId)return toast("اختر المشروع");v.companyId=(projById(v.projectId)||{}).companyId||v.companyId}
+     const files=(d.files||[]).concat(await storeFiles(S.pending||[]));upsert("docs",{...d,...v,files,id:d.id||uid()});await save();closeModal();render();toast(v.expiry?`تم حفظ المستند. سننبهك قبل انتهائه بـ ${S.db.settings.alertDays||60} يومًا.`:"تم حفظ المستند. أضف تاريخ الانتهاء ليصلك تنبيه قبل التجديد.",4200)},
+   onDelete:d.id&&(()=>ask("حذف هذا المستند ومرفقاته؟",async()=>{for(const f of d.files||[])await fileDel(f.id);remove("docs",d.id);await save();closeModal();render()}))});
+  const sync=()=>{const t=$("#f_ownerType").value;$("#f_ownerId").closest(".fld").hidden=t!=="employee";$("#f_companyId").closest(".fld").hidden=t!=="company";$("#f_projectId").closest(".fld").querySelector("label").textContent=t==="project"?"المشروع *":"ربط بمشروع (اختياري)";if(!S.db.projects.length&&t!=="project")$("#f_projectId").closest(".fld").hidden=true;else $("#f_projectId").closest(".fld").hidden=false;const cur=$("#f_type").value;const opts=typesFor(t);$("#f_type").innerHTML=opts.map(o=>`<option${o===cur?" selected":""}>${esc(o)}</option>`).join("")};
+  $("#f_ownerType").addEventListener("change",sync);sync()}
+
+function formEmp(e){if(needCo())return;e=e||{};openForm({title:e.id?"تعديل بيانات الموظف":"موظف جديد",fields:[{k:"name",label:"الاسم الكامل",req:1,val:e.name},{k:"companyId",label:"الشركة",type:"select",options:coOpts(),val:e.companyId||defCo()},{type:"row",items:[{k:"job",label:"المسمى الوظيفي",val:e.job},{k:"nationality",label:"الجنسية",val:e.nationality}]},{type:"row",items:[{k:"phone",label:"الهاتف",val:e.phone},{k:"salary",label:"الراتب الشهري (ر.ع)",type:"number",val:e.salary}]},{k:"joinDate",label:"تاريخ الالتحاق",type:"date",val:e.joinDate},...(S.db.projects.length?[{k:"projectId",label:"يعمل حاليًا في مشروع (اختياري)",type:"select",options:projOpts(),val:e.projectId??focusP()}]:[])],
+  onSave:async v=>{const r=upsert("employees",{...e,...v,id:e.id||uid()});S.tipAfter=e.id?"":"تمت إضافة الموظف. افتح ملفه وأضف البطاقة والجواز مع صورها.";S.db.docs.filter(d=>d.ownerId===r.id).forEach(d=>{d.companyId=r.companyId});await save();closeModal();render();toast(S.tipAfter||"تم الحفظ",4000);S.tipAfter=""},
+  onDelete:e.id&&(()=>ask("حذف الموظف ومستنداته؟",async()=>{S.db.docs.filter(d=>d.ownerId===e.id).forEach(d=>remove("docs",d.id));remove("employees",e.id);await save();closeModal();render()}))})}
+
+function formTx(t,kind,proj){if(needCo())return;t=t||{};kind=t.kind||kind||"out";
+  openForm({title:t.id?"تعديل الحركة":kind==="in"?"تسجيل دخل":"تسجيل مصروف",fields:[{k:"kind",label:"النوع",type:"select",options:[["out","مصروف"],["in","دخل"]],val:kind},
+   {type:"row",items:[{k:"amount",label:"المبلغ (ر.ع)",type:"number",req:1,val:t.amount},{k:"date",label:"التاريخ",type:"date",req:1,val:t.date||today()}]},
+   {k:"category",label:"التصنيف",type:"select",options:kind==="in"?IN_CATS:OUT_CATS,val:t.category},
+   {k:"companyId",label:"الشركة",type:"select",options:coOpts(),val:t.companyId||((S.db.projects.find(p=>p.id===proj)||{}).companyId)||defCo()},
+   {k:"projectId",label:"المشروع (اختياري)",type:"select",options:[["","بدون مشروع"],...S.db.projects.map(p=>[p.id,p.name])],val:t.projectId||proj||focusP()||""},
+   {k:"note",label:"البيان",val:t.note,ph:"مثال: فاتورة كهرباء أكتوبر"}],
+   onSave:async v=>{v.amount=+v.amount;if(!(v.amount>0))return toast("أدخل مبلغًا صحيحًا");upsert("tx",{...t,...v,id:t.id||uid()});await save();closeModal();render();toast(v.kind==="in"?"تم تسجيل الدخل. شاهد أثره في «التقارير».":"تم تسجيل المصروف. للمصاريف المتكررة أضفها في «الالتزامات الشهرية».",3800)},
+   onDelete:t.id&&(()=>ask("حذف هذه الحركة؟",async()=>{remove("tx",t.id);await save();closeModal();render()}))});
+  $("#f_kind").addEventListener("change",e=>{const o=e.target.value==="in"?IN_CATS:OUT_CATS;$("#f_category").innerHTML=o.map(x=>`<option>${esc(x)}</option>`).join("")})}
+
+function formBill(b){if(needCo())return;b=b||{};openForm({title:b.id?"تعديل الالتزام":"التزام شهري جديد",fields:[{k:"name",label:"الاسم",req:1,val:b.name,ph:"إيجار المكتب، الكهرباء…"},{k:"category",label:"التصنيف",type:"select",options:OUT_CATS,val:b.category},{type:"row",items:[{k:"amount",label:"المبلغ المعتاد (ر.ع)",type:"number",req:1,val:b.amount},{k:"dueDay",label:"يوم الاستحقاق من الشهر",type:"number",val:b.dueDay||1}]},{k:"companyId",label:"الشركة",type:"select",options:coOpts(),val:b.companyId||defCo()}],
+  onSave:async v=>{v.amount=+v.amount;v.dueDay=Math.min(28,Math.max(1,+v.dueDay||1));upsert("bills",{...b,...v,id:b.id||uid()});await save();closeModal();render()},
+  onDelete:b.id&&(()=>ask("حذف هذا الالتزام؟",async()=>{remove("bills",b.id);await save();closeModal();render()}))})}
+
+function formProj(p){if(needCo())return;p=p||{};openForm({title:p.id?"تعديل المشروع":"مشروع جديد",fields:[{k:"name",label:"اسم المشروع",req:1,val:p.name},{type:"row",items:[{k:"client",label:"العميل",val:p.client},{k:"companyId",label:"الشركة",type:"select",options:coOpts(),val:p.companyId||defCo()}]},{type:"row",items:[{k:"budget",label:"الميزانية (ر.ع)",type:"number",val:p.budget},{k:"progress",label:"نسبة الإنجاز %",type:"number",val:p.progress||0}]},{type:"row",items:[{k:"start",label:"البداية",type:"date",val:p.start||today()},{k:"end",label:"التسليم",type:"date",val:p.end}]},{k:"status",label:"الحالة",type:"select",options:["قيد التنفيذ","متوقف","مكتمل","عرض سعر"],val:p.status}],
+  onSave:async v=>{v.budget=+v.budget||0;v.progress=Math.min(100,Math.max(0,+v.progress||0));upsert("projects",{...p,...v,id:p.id||uid()});await save();closeModal();render()},
+  onDelete:p.id&&(()=>ask("حذف المشروع؟ الحركات المرتبطة به تبقى.",async()=>{["tx","files","folders","employees"].forEach(k=>S.db[k].forEach(x=>{if(x.projectId===p.id){x.projectId="";x.u=now()}}));S.db.docs.forEach(x=>{if(x.projectId===p.id){x.projectId="";if(x.ownerType==="project")x.ownerType="company";x.u=now()}});if(S.local.co==="p:"+p.id){S.local.co="all";await saveLocal()}remove("projects",p.id);await save();closeModal();render()}))})}
+
+/* ========== detail sheets ========== */
+async function getBlob(id){let b=await fileGet(id);if(!b&&S.sync.connected&&S.token&&S.tokenExp>now()){try{b=await drivePullFile(id);if(b)await filePut(id,b)}catch(e){}}return b}
+function openDoc(id){const d=S.db.docs.find(x=>x.id===id);if(!d)return;const s=docStatus(d);
+  modal(`<div class="row"><h2 style="flex:1;min-width:0">${esc(d.type)}</h2><span class="pill ${s.cls}">${s.txt}</span></div>
+  <dl class="kv"><dt>خاص بـ</dt><dd>${esc(ownerLabel(d))}</dd>${d.ownerType==="employee"?`<dt>الشركة</dt><dd>${esc(coName(d.companyId))}</dd>`:""}<dt>الرقم</dt><dd class="num" style="text-align:right">${esc(d.number||"—")}</dd><dt>الإصدار</dt><dd>${fdate(d.issue)}</dd><dt>الانتهاء</dt><dd>${fdate(d.expiry)}</dd>${d.notes?`<dt>ملاحظات</dt><dd>${esc(d.notes)}</dd>`:""}</dl>
+  <h3 style="font-size:14px">المرفقات</h3><div class="thumbs">${(d.files||[]).map(f=>`<button class="thumb" data-act="viewFile" data-id="${f.id}" data-doc="${d.id}" data-thumb="${f.id}">${f.mime==="application/pdf"?I.pdf:I.doc}<span>${esc(f.name.slice(0,18))}</span></button>`).join("")||`<span class="muted" style="font-size:13px">لا توجد مرفقات.</span>`}</div>
+  <div class="row"><label class="btn sm" for="addPick">${I.clip} إرفاق ملف</label><input id="addPick" type="file" accept="image/*,application/pdf" multiple hidden data-doc="${d.id}"><label class="btn sm" for="addCam">${I.cam} تصوير</label><input id="addCam" type="file" accept="image/*" capture="environment" hidden data-doc="${d.id}"></div>
+  <div class="row-end"><button class="btn ghost" data-act="close">إغلاق</button><span class="sp"></span><button class="btn" data-act="shareDoc" data-id="${d.id}">${I.share} مشاركة</button><button class="btn" data-act="renewDoc" data-id="${d.id}">تجديد</button><button class="btn primary" data-act="editDoc" data-id="${d.id}">تعديل</button></div>`);afterRender()}
+async function viewFile(id,docId){const d=S.db.docs.find(x=>x.id===docId);const f=(d.files||[]).find(x=>x.id===id);const b=await getBlob(id);
+  if(!b){toast(S.sync.connected?"المرفق غير موجود على هذا الجهاز. اضغط زر المزامنة ثم أعد المحاولة.":"المرفق غير موجود على هذا الجهاز");return}
+  S.blobs[id]=b;const u=URL.createObjectURL(b);const isImg=b.type.startsWith("image/");
+  modal(`<div class="row"><h2 style="flex:1;min-width:0;font-size:16px;overflow-wrap:anywhere">${esc(f.name)}</h2></div><div class="viewer" data-url="${u}">${isImg?`<img src="${u}" alt="${esc(f.name)}">`:`<iframe src="${u}" title="${esc(f.name)}"></iframe>`}</div>
+  <div class="row-end"><button class="btn danger sm" data-act="delFile" data-id="${id}" data-doc="${docId}">حذف المرفق</button><span class="sp"></span><a class="btn" href="${u}" target="_blank" rel="noopener">فتح</a><button class="btn" data-act="shareFile" data-id="${id}" data-doc="${docId}">${I.share} مشاركة</button><button class="btn primary" data-act="openDoc" data-id="${docId}">رجوع</button></div>`,true)}
+function openEmp(id){const e=S.db.employees.find(x=>x.id===id);if(!e)return;const ds=S.db.docs.filter(d=>d.ownerType==="employee"&&d.ownerId===id).map(d=>({d,s:docStatus(d)})).sort((a,b)=>a.s.n-b.s.n);const miss=REQUIRED_EMP.filter(t=>!ds.some(x=>x.d.type===t));
+  modal(`<h2>${esc(e.name)}</h2><dl class="kv"><dt>الوظيفة</dt><dd>${esc(e.job||"—")}</dd><dt>الجنسية</dt><dd>${esc(e.nationality||"—")}</dd><dt>الشركة</dt><dd>${esc(coName(e.companyId))}</dd><dt>الهاتف</dt><dd class="num" style="text-align:right">${esc(e.phone||"—")}</dd><dt>الراتب</dt><dd>${e.salary?M(e.salary):"—"}</dd><dt>الالتحاق</dt><dd>${fdate(e.joinDate)}</dd></dl>
+  ${miss.length?`<div class="demo-note" style="border-style:solid">ناقص: ${esc(miss.join("، "))}</div>`:""}
+  <h3 style="font-size:14px">المستندات</h3>${ds.length?`<div class="list">${ds.map(x=>docItem(x.d,x.s)).join("")}</div>`:`<span class="muted" style="font-size:13px">لا توجد مستندات.</span>`}
+  <div class="row-end"><button class="btn ghost" data-act="close">إغلاق</button><span class="sp"></span>${ds.some(x=>(x.d.files||[]).length)?`<button class="btn" data-act="shareEmp" data-id="${id}">${I.share} مشاركة الملف</button>`:""}<button class="btn" data-act="editEmp" data-id="${id}">تعديل البيانات</button><button class="btn primary" data-act="newDoc" data-emp="${id}">${I.plus} مستند</button></div>`);}
+
+/* ========== text summaries ========== */
+function summaryText(){const[a,b]=monthRange(0);const c=sumRange(a,b);const al=alertsList();
+  const lines=["أنا أدير "+(S.local.co==="all"?S.db.companies.length+" شركة ومشاريعها":scopeName())+" في سلطنة عمان. هذا ملخص وضعي الحالي، أريد نصيحتك كمستشار مالي وإداري:","",
+  `هذا الشهر: دخل ${money(c.i)} ر.ع، مصروفات ${money(c.o)} ر.ع، صافي ${money(c.n)} ر.ع.`];
+  for(let k=1;k<=3;k++){const[x,y]=monthRange(-k);const s=sumRange(x,y);lines.push(`${MONTHS[pd(x).getMonth()]}: دخل ${money(s.i)}، مصروف ${money(s.o)}`)}
+  lines.push("","ملاحظات المستشار الآلي:",...finInsights().map(i=>"- "+i[1]+": "+i[2]),...fileInsights().map(i=>"- "+i[1]+": "+i[2]));
+  if(al.length)lines.push("","مستندات تحتاج متابعة:",...al.slice(0,10).map(x=>`- ${x.d.type} (${ownerLabel(x.d)}): ${x.s.txt}`));
+  lines.push("","سؤالي: ");return lines.join("\n")}
+async function copyText(t){try{await navigator.clipboard.writeText(t);toast("تم النسخ — الصقه في محادثة مع Claude")}catch(e){modal(`<h2>انسخ النص</h2><textarea id="cpy" style="width:100%;min-height:50vh;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)">${esc(t)}</textarea><div class="row-end"><span class="sp"></span><button class="btn primary" data-act="close">تم</button></div>`);const x=$("#cpy");x.focus();x.select()}}
+
+/* ========== backup ========== */
+const b64=buf=>{let s="";const a=new Uint8Array(buf);for(let i=0;i<a.length;i+=0x8000)s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000));return btoa(s)};
+const unb64=s=>{const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a};
+async function exportBackup(){const files={};for(const k of await fileKeys()){const b=await fileGet(k);if(b)files[k]={t:b.type,d:b64(await b.arrayBuffer())}}
+  const blob=new Blob([JSON.stringify({app:"idarat-a3mali",at:new Date().toISOString(),db:S.db,files})],{type:"application/json"});
+  shareSheet("نسخة احتياطية","نسخة احتياطية من إدارة أعمالي — "+today(),[new File([blob],`ادارة-اعمالي-${today()}.json`,{type:"application/json"})])}
+async function importBackup(file){try{const j=JSON.parse(await file.text());if(!j.db||!j.db.companies)throw 0;for(const[k,v]of Object.entries(j.files||{}))await filePut(k,new Blob([unb64(v.d)],{type:v.t}));S.db=mergeDB(S.db.demo?stripDemo(S.db):S.db,normalizeDB(j.db));delete S.db.demo;await save();render();toast("تم استيراد النسخة")}catch(e){toast("الملف غير صالح. اختر ملف نسخة احتياطية من هذا التطبيق.")}}
+
+/* ========== merge (per record, newest wins, deletions tracked) ========== */
+function mergeDB(a,b){const r=emptyDB();r.del={...(a.del||{})};for(const[k,v]of Object.entries(b.del||{}))r.del[k]=Math.max(r.del[k]||0,v);
+  for(const c of COLL){const m=new Map();for(const x of a[c]||[])m.set(x.id,x);for(const x of b[c]||[]){const y=m.get(x.id);if(!y||(x.u||0)>(y.u||0))m.set(x.id,x)}
+    r[c]=[...m.values()].filter(x=>!(r.del[x.id]>=(x.u||0)))}
+  r.settings=((b.settings||{}).u||0)>((a.settings||{}).u||0)?b.settings:a.settings;if(a.demo&&b.demo)r.demo=true;return r}
+
+/* ========== Google Drive sync (encrypted, appDataFolder) ========== */
+const SCOPE="https://www.googleapis.com/auth/drive.appdata";const MAIN="idarat-a3mali-db.enc";
+let syncTimer=null;
+function setSync(s){S.syncState=s;const b=document.querySelector(".sync .dot");if(b){b.className="dot "+(s==="on"?"on":s==="busy"?"busy":s==="err"?"err":"");b.parentNode.querySelector(".st").textContent=SYNC_TXT[s]}}
+function scheduleSync(){if(!S.sync.connected)return;if(S.token&&S.tokenExp>now()){clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(true),3500)}else setSync("wait")}
+async function deriveKey(pass,salt){const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:150000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
+async function enc(buf){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const k=await deriveKey(S.sync.pass,salt);const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},k,buf));const out=new Uint8Array(28+ct.length);out.set(salt);out.set(iv,16);out.set(ct,28);return out}
+async function dec(buf){const a=new Uint8Array(buf);const k=await deriveKey(S.sync.pass,a.slice(0,16));return crypto.subtle.decrypt({name:"AES-GCM",iv:a.slice(16,28)},k,a.slice(28))}
+function loadGIS(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.onload=()=>res();s.onerror=()=>rej(new Error("gis"));document.head.appendChild(s)})}
+async function getToken(interactive){if(S.token&&S.tokenExp>now()+60000)return S.token;await loadGIS();return new Promise((res,rej)=>{const c=google.accounts.oauth2.initTokenClient({client_id:S.sync.clientId,scope:SCOPE,callback:r=>{if(r.error)return rej(new Error(r.error));S.token=r.access_token;S.tokenExp=now()+(r.expires_in||3600)*1000;res(S.token)},error_callback:e=>rej(new Error(e.type||"popup"))});c.requestAccessToken({prompt:interactive&&!S.sync.connected?"consent":""})})}
+async function gfetch(url,opt={}){const r=await fetch(url,{...opt,headers:{...(opt.headers||{}),Authorization:"Bearer "+S.token}});if(!r.ok)throw new Error("drive "+r.status);return r}
+async function findFile(name){const q=encodeURIComponent(`name='${name}'`);const r=await gfetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,name)&pageSize=10`);return((await r.json()).files||[])[0]}
+async function uploadFile(name,bytes,id){if(id){await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media`,{method:"PATCH",headers:{"Content-Type":"application/octet-stream"},body:bytes});return id}
+  const fd=new FormData();fd.append("metadata",new Blob([JSON.stringify({name,parents:["appDataFolder"]})],{type:"application/json"}));fd.append("file",new Blob([bytes],{type:"application/octet-stream"}));
+  const r=await gfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",body:fd});return(await r.json()).id}
+async function download(id){const r=await gfetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);return r.arrayBuffer()}
+async function drivePullFile(fid){const f=await findFile("f_"+fid+".enc");if(!f)return null;const plain=new Uint8Array(await dec(await download(f.id)));const tl=plain[0];const type=new TextDecoder().decode(plain.slice(1,1+tl));return new Blob([plain.slice(1+tl)],{type})}
+async function syncNow(silent){if(!S.sync.clientId||!S.sync.pass){if(!silent){S.view="prefs";render();toast("أدخل معرّف العميل وكلمة التشفير أولًا")}return}
+  if(S.syncState==="busy")return;setSync("busy");
+  try{await getToken(!silent);
+    const f=await findFile(MAIN);let remote=null;
+    if(f){try{remote=JSON.parse(new TextDecoder().decode(await dec(await download(f.id))))}catch(e){throw new Error("pass")}}
+    if(remote){const local=S.db.demo&&!remote.demo?stripDemo(S.db):S.db;S.db=mergeDB(local,normalizeDB(remote));if(!(local.demo&&remote.demo))delete S.db.demo;await kvSet("db",S.db)}
+    await uploadFile(MAIN,await enc(new TextEncoder().encode(JSON.stringify(S.db))),f&&f.id);
+    const used=new Set([...S.db.docs.flatMap(d=>(d.files||[]).map(x=>x.id)),...S.db.files.map(x=>x.meta&&x.meta.id).filter(Boolean)]);const done=new Set(S.sync.synced);
+    for(const k of await fileKeys()){if(!used.has(k)||done.has(k))continue;const b=await fileGet(k);if(!b)continue;const t=new TextEncoder().encode(b.type||"application/octet-stream");const raw=new Uint8Array(await b.arrayBuffer());const p=new Uint8Array(1+t.length+raw.length);p[0]=t.length;p.set(t,1);p.set(raw,1+t.length);
+      const ex=await findFile("f_"+k+".enc");await uploadFile("f_"+k+".enc",await enc(p),ex&&ex.id);done.add(k)}
+    S.sync.synced=[...done];S.sync.connected=true;S.sync.lastSync=now();await saveLocal();setSync("on");
+    if(!silent||remote)render();if(!silent)toast("تمت المزامنة مع Google Drive")}
+  catch(e){setSync("err");const m=String(e.message||e);if(!silent)toast(m==="pass"?"كلمة التشفير لا تطابق البيانات المحفوظة في Drive":m==="gis"?"تعذر تحميل خدمة Google. هذه الميزة تعمل من نسخة GitHub Pages فقط.":m.includes("popup")?"تم إغلاق نافذة تسجيل الدخول":"تعذرت المزامنة: "+m)}}
+
+/* ========== feature cards & help ========== */
+const FEAT={
+ home:{i:"home",view:"home",title:"الرئيسية",what:"ملخص يومك: المستندات التي تحتاج تجديدًا، والفواتير المستحقة، ودخل ومصروف الشهر، وحالة الاتصال بـ Google Drive.",
+  tip:"ابدأ يومك من هنا: الأرقام الحمراء تحتاج تصرّفًا اليوم.",
+  steps:["راجع البطاقات الحمراء أولًا (مستندات منتهية أو فواتير متأخرة) واضغط عليها لفتح التفاصيل.","استخدم الأزرار السريعة لإضافة مستند أو ملف أو مصروف أو دخل بلمسة واحدة.","اسحب الشاشة للأسفل من أعلى الصفحة لتحديث البيانات ومزامنتها مع Google Drive.","اسحب يمينًا أو يسارًا للانتقال بين التبويبات السفلية."]},
+ docs:{i:"doc",view:"docs",act:"newDoc",title:"المستندات الرسمية",what:"السجل التجاري، والشهادات الضريبية، والرخص، وبطاقات وجوازات العمال، مع صورها وتنبيه قبل انتهائها.",
+  tip:"احفظ كل مستند رسمي مع تاريخ انتهائه وصورته، وسننبهك قبل التجديد.",
+  steps:["اضغط «مستند جديد».","اختر «الشركة» أو «موظف»، ثم اختر نوع المستند.","اكتب رقم المستند وتاريخ الإصدار وتاريخ الانتهاء كما هو مكتوب على الورقة.","أرفق ملف PDF أو اضغط «تصوير» لتصوير الورقة بالكاميرا.","اضغط «حفظ». سيظهر في التنبيهات قبل انتهائه بالمدة التي تحددها في الإعدادات.","عند التجديد افتح المستند واضغط «تجديد» ثم أرفق النسخة الجديدة.","للإرسال افتح المستند واضغط «مشاركة» واختر البريد أو واتساب أو AirDrop."]},
+ files:{i:"folder",view:"files",act:"newLib",title:"ملفاتي",what:"مكتبة لكل ملفاتك الأخرى بأسماء تختارها بنفسك: عقود العملاء، فواتير الموردين، عروض الأسعار، الصور، وأي PDF.",
+  tip:"أنشئ مجلدات وسمِّ ملفاتك بأسماء واضحة لتجدها بسرعة.",
+  steps:["اضغط «مجلد جديد» واكتب اسمًا مثل «عقود العملاء». يمكنك إنشاء مجلد داخل مجلد.","ادخل المجلد واضغط «إضافة ملف».","اختر ملفًا أو صوّر ورقة، ثم اكتب اسمًا واضحًا لكل ملف.","اضغط على أي ملف لعرضه أو مشاركته أو إعادة تسميته أو نقله لمجلد آخر.","ابحث بالاسم من خانة البحث، فيبحث في كل المجلدات.","زر «مشاركة المجلد» يرسل كل ملفات المجلد دفعة واحدة."]},
+ emps:{i:"users",view:"emps",act:"newEmp",title:"الموظفون",what:"ملف لكل عامل يضم بياناته ومستنداته، مع تنبيه إذا كان ملفه ناقصًا أو اقترب انتهاء بطاقته.",
+  tip:"أضف كل عامل ثم أرفق بطاقته وجوازه وتصريح عمله.",
+  steps:["اضغط «موظف جديد» واكتب الاسم والوظيفة والجنسية والراتب.","افتح ملف الموظف واضغط «+ مستند».","أضف البطاقة الشخصية أو بطاقة المقيم والجواز وتصريح العمل مع الصور.","علامة «ناقص» تعني أن البطاقة أو الجواز غير مسجلين بعد.","زر «مشاركة الملف» يرسل كل مستندات العامل، مثلًا لمكتب سند."]},
+ money:{i:"wallet",view:"money",act:"newTx",kind:"out",title:"المالية",what:"تسجيل الدخل والمصروفات، ومتابعة الالتزامات الشهرية مثل الإيجار والكهرباء والماء والإنترنت.",
+  tip:"سجّل كل مبلغ يدخل أو يخرج، وأضف الإيجار والكهرباء والماء كالتزامات شهرية.",
+  steps:["اضغط «مصروف» أو «دخل» واكتب المبلغ والتاريخ والتصنيف.","اختر المشروع إذا كان المبلغ يخص مشروعًا معيّنًا.","من تبويب «الالتزامات الشهرية» أضف الإيجار والكهرباء والماء مع يوم الاستحقاق.","عند الدفع اضغط «سداد» فيُسجَّل المصروف تلقائيًا.","استخدم الأسهم للتنقل بين الشهور."]},
+ projects:{i:"brief",view:"projects",act:"newProj",title:"المشاريع",what:"تتبع كل مشروع: الميزانية، والمصروف الفعلي، والمقبوض من العميل، ونسبة الإنجاز وموعد التسليم.",
+  tip:"اربط المصروفات بالمشروع لتعرف هل ما زلت داخل الميزانية.",
+  steps:["اضغط «مشروع جديد» واكتب الاسم والعميل والميزانية وموعد التسليم.","اضغط «فتح المشروع» لإدارة مستنداته وملفاته وعماله بشكل مستقل.","عند تسجيل أي مصروف أو دفعة اختر هذا المشروع.","حدّث نسبة الإنجاز من «تعديل» كل أسبوع.","الشريط البرتقالي أو الأحمر يعني اقتراب الميزانية من النفاد."]},
+ reports:{i:"chart",view:"reports",title:"التقارير",what:"دخل ومصروف وصافي الربح يوميًا وأسبوعيًا وشهريًا وسنويًا، مع توزيع المصروفات ومقارنة الشركات.",
+  tip:"اختر الفترة من الأعلى، وشارك التقرير مع ملف Excel بضغطة.",
+  steps:["اختر: يومي، أسبوعي، شهري، أو سنوي.","النسبة بجانب كل رقم تقارن بالفترة السابقة.","«توزيع المصروفات» يبيّن أين يذهب أكثر مالك.","«مشاركة التقرير» يرسل ملخصًا مع ملف CSV يفتح في Excel وNumbers."]},
+ advisor:{i:"spark",view:"advisor",title:"المستشار الذكي",what:"يحلل بياناتك تلقائيًا: العجز والأرباح والاحتياطي النقدي والمستندات الناقصة، ويعطيك توصيات عملية.",
+  tip:"راجع التوصيات أسبوعيًا، وللأسئلة المفتوحة انسخ الملخص واسأل Claude.",
+  steps:["اقرأ التوصيات الحمراء ثم البرتقالية.","«مؤشر سلامة الملفات» يرتفع كلما جددت المستندات وأرفقت صورها.","اضغط «نسخ ملخص لسؤال Claude»، ثم الصقه في محادثة واكتب سؤالك."]},
+ proj:{i:"brief",view:"proj",title:"صفحة المشروع",what:"كل ما يخص مشروعًا واحدًا: مستنداته وتواريخ انتهائها، ملفاته، عماله، ومصروفاته ودفعاته.",
+  tip:"اختر المشروع من الشرائح أعلى الصفحة، أو من القائمة أعلى الشاشة.",
+  steps:["افتح «المشاريع» واضغط «فتح المشروع»، أو اختره من القائمة أعلى الشاشة تحت «المشاريع».","أضف مستندات المشروع: العقد، تصريح البناء، الكفالات، مع تواريخ الانتهاء.","أضف ملفات المشروع: المخططات والصور والمستخلصات.","اضغط «متابعة هذا المشروع فقط» لتعرض كل الصفحات بيانات هذا المشروع وحده.","الصفحة الرئيسية تبقى دائمًا نظرة عامة على كل شركاتك ومشاريعك."]},
+ guide:{i:"compass",view:"guide",title:"دليل تأسيس المشروع",what:"خطوات مرتبة لتأسيس نشاط تجاري في سلطنة عمان: ماذا تحتاج، ومن أين تأخذه، وبأي ترتيب، مع متابعة إنجازك.",
+  tip:"اتبع الخطوات بالترتيب، وعلّم كل خطوة تنهيها.",
+  steps:["اختر نوع نشاطك من الأعلى لتظهر الموافقات الخاصة به.","افتح كل خطوة لترى المستندات المطلوبة والجهة والرابط.","بعد الإنجاز اضغط «تمّت»، واضغط «أضف لمستنداتي» لحفظ الشهادة وتاريخ انتهائها.","إذا تعذّر عليك أي إجراء إلكترونيًا، يمكنك إنجازه عبر أقرب مكتب «سند»."]},
+ prefs:{i:"gear",view:"prefs",act:"newCo",title:"الشركات والإعدادات",what:"إضافة شركاتك، وربط Google Drive للعمل من كل الأجهزة، وضبط مدة التنبيه، والنسخ الاحتياطي.",
+  steps:["اضغط «+ شركة» وأضف اسمها ورقم السجل والرقم الضريبي.","للمزامنة: الصق معرّف العميل واكتب كلمة تشفير، ثم «ربط Google Drive».","استخدم نفس كلمة التشفير على الآيفون والماك.","حدد عدد أيام التنبيه قبل انتهاء المستندات."]},
+ sync:{i:"cloud",view:"prefs",title:"العمل من الآيفون والماك",what:"تُحفظ نسخة مشفّرة من بياناتك وملفاتك في Google Drive، فتفتح نفس البيانات من أي جهاز.",
+  steps:["افتح «الشركات والإعدادات» وأدخل معرّف العميل وكلمة التشفير.","اضغط «ربط Google Drive» ووافق على الإذن.","كرر نفس الخطوة على الجهاز الآخر بنفس الكلمة.","المؤشر الأخضر أعلى الشاشة يعني «Drive متصل»، والرمادي يعني غير متصل.","اسحب الشاشة للأسفل في أي وقت لجلب آخر التعديلات."]},
+ share:{i:"share",title:"المشاركة بالبريد وواتساب وAirDrop",what:"أرسل أي مستند أو ملف أو تقرير من داخل التطبيق.",
+  steps:["افتح المستند أو الملف أو التقرير.","اضغط «مشاركة» ثم «مشاركة» مرة أخرى في النافذة.","اختر البريد أو واتساب أو AirDrop أو «حفظ في الملفات»."]},
+ gestures:{i:"refresh",title:"التنقل والإيماءات",what:"حركات سريعة تجعل استخدام التطبيق أسهل على الآيفون.",
+  steps:["اسحب يمينًا أو يسارًا على الشاشة للانتقال بين التبويبات السفلية.","اسحب للأسفل من أعلى الصفحة للتحديث والمزامنة.","اضغط ؟ أعلى الشاشة لشرح الصفحة التي أنت فيها.","اضغط خارج أي نافذة لإغلاقها."]}};
+const baseHelpKey=v=>FEAT[v]?v:"gestures";
+function openHelp(k){const f=FEAT[k]||FEAT.home;
+  modal(`<div class="row"><span class="ico">${I[f.i]}</span><h2 style="flex:1;min-width:0">${esc(f.title)}</h2></div><p style="margin:0">${esc(f.what)}</p>
+  <h3 style="font-size:14px;margin:0">خطوة بخطوة</h3><ol class="steps">${f.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+  <div class="row-end"><button class="btn ghost" data-go="help">كل البطاقات التعريفية</button><span class="sp"></span>${f.act||f.view&&f.view!==S.view?`<button class="btn primary" data-act="featGo" data-k="${k}">ابدأ الآن</button>`:`<button class="btn primary" data-act="close">فهمت</button>`}</div>`)}
+VIEWS.help=()=>`<div class="page-h"><div><h1>الدليل والمساعدة</h1><p>بطاقة تعريفية لكل ما يمكنك عمله. اضغط أي بطاقة لترى الخطوات.</p></div><span class="sp"></span><button class="btn" data-act="tour">${I.spark} الجولة التعريفية</button></div>
+  <div class="fgrid">${Object.entries(FEAT).map(([k,f])=>`<button class="fcard" data-act="helpKey" data-k="${k}"><span class="ico">${I[f.i]}</span><span class="t">${esc(f.title)}</span><span class="s">${esc(f.what)}</span></button>`).join("")}</div>`;
+
+/* onboarding tour */
+const TOUR=[["building","مرحبًا بك في إدارة أعمالي","مكان واحد لشركتك: المستندات الرسمية، ملفات العمل، المال، والمشاريع. خذ دقيقة لتتعرف على التطبيق."],
+ ["doc","مستنداتك وتنبيهاتها","احفظ السجل التجاري وبطاقات العمال مع صورة أو PDF، وسننبهك قبل انتهاء أي مستند."],
+ ["folder","ملفاتي","أنشئ مجلدات وسمِّ ملفاتك بنفسك، وشاركها بالبريد أو واتساب أو AirDrop."],
+ ["wallet","المال والتقارير","سجّل الدخل والمصروفات والإيجار والكهرباء والماء، وتابع تقارير يومية وأسبوعية وشهرية وسنوية."],
+ ["compass","دليل تأسيس مشروعك","خطوات مرتبة لتأسيس نشاط في سلطنة عمان: ما المستند، ومن أين تأخذه، وبأي ترتيب."],
+ ["cloud","على كل أجهزتك","اربط Google Drive لتعمل من الآيفون والماك بنفس البيانات. اسحب للأسفل للتحديث، ويمينًا أو يسارًا للتنقل، واضغط ؟ لشرح أي صفحة."]];
+function showTour(){closeModal();let i=0;const el=document.createElement("div");el.className="ob";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");document.body.appendChild(el);
+  const end=async(goGuide)=>{el.remove();S.local.onboarded=true;await saveLocal();if(goGuide)go("guide");else if(S.db.demo)toast("هذه بيانات تجريبية للتوضيح. احذفها من الشريط الأصفر عندما تكون جاهزًا.",5000)};
+  const draw=()=>{const[ic,t,d]=TOUR[i];const last=i===TOUR.length-1;
+    el.innerHTML=`<button class="skip" data-ob="skip">تخطي</button><div class="ob-card" key="${i}"><div class="ob-ill">${I[ic]}</div><h2>${t}</h2><p>${d}</p></div>
+    <div class="dots">${TOUR.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div>
+    <div class="row" style="justify-content:center">${i?`<button class="btn" data-ob="prev">السابق</button>`:""}${last?`<button class="btn" data-ob="guide">${I.compass} ابدأ بدليل التأسيس</button><button class="btn primary" data-ob="done">ابدأ الاستخدام</button>`:`<button class="btn primary" data-ob="next">التالي</button>`}</div>`};
+  el.addEventListener("click",e=>{const b=e.target.closest("[data-ob]");if(!b)return;const k=b.dataset.ob;if(k==="next"&&i<TOUR.length-1)i++;else if(k==="prev"&&i>0)i--;else if(k==="skip"||k==="done")return end(false);else if(k==="guide")return end(true);draw()});
+  let sx=null;el.addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
+  el.addEventListener("touchend",e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)<50)return;if(dx>0&&i<TOUR.length-1)i++;else if(dx<0&&i>0)i--;draw()},{passive:true});
+  draw();el.querySelector("[data-ob]").focus()}
+
+/* home cards */
+function driveCard(){const sy=S.sync,st=S.syncState;const on=sy.connected;
+  const txt=!on?"غير متصل. بياناتك محفوظة على هذا الجهاز فقط.":st==="busy"?"جارٍ المزامنة الآن…":st==="err"?"تعذرت آخر مزامنة. اضغط للمحاولة مرة أخرى.":st==="wait"?"متصل. اضغط «مزامنة» أو اسحب للأسفل لجلب آخر التعديلات.":"متصل ومتزامن"+(sy.lastSync?" — "+new Date(sy.lastSync).toLocaleString("ar-OM",{hour:"numeric",minute:"2-digit",day:"numeric",month:"short"}):"");
+  return`<section class="panel drive ${on&&st!=="err"?"on":""}"><span class="ico">${I.cloud}</span><div class="sp" style="min-width:0"><b>Google Drive</b><div class="muted" style="font-size:13px">${txt}</div></div>${on?`<button class="btn sm" data-act="refresh">${I.refresh} مزامنة</button>`:`<button class="btn sm primary" data-go="prefs">ربط</button>`}</section>`}
+function guideCard(){const g=S.db.settings.guide||{};const n=GUIDE.filter(x=>g[x.id]).length;if(n>=GUIDE.length)return"";const next=GUIDE.find(x=>!g[x.id]);
+  return`<section class="panel"><div class="row"><span class="ico">${I.compass}</span><div class="sp" style="min-width:0"><b>دليل تأسيس مشروعك</b><div class="muted" style="font-size:13px">أنجزت ${n} من ${GUIDE.length}. التالي: ${esc(next.t)}</div></div><button class="btn sm" data-go="guide">تابع</button></div><div class="bar" style="margin-top:10px"><i style="width:${n/GUIDE.length*100}%"></i></div></section>`}
+
+/* ========== Oman business setup guide ========== */
+const L=(t,u)=>({t,u});
+const SECTORS={
+ trade:{l:"تجارة عامة / استيراد",items:["التسجيل لدى الجمارك (نظام «بيان») إذا كنت ستستورد أو تصدّر بضاعة.","التأكد من اشتراطات المواصفات والمقاييس للمنتجات المستوردة.","ترخيص البلدية للمحل أو المستودع، وترخيص الدفاع المدني للمستودع."]},
+ contracting:{l:"مقاولات وبناء",items:["التسجيل في منصة «إسناد» للمناقصات الحكومية إذا كنت ستدخل مناقصات.","تصاريح البناء من البلدية لكل مشروع قبل البدء.","شهادات السلامة المهنية للعمال، وتأمين المسؤولية تجاه الغير والمعدات."]},
+ food:{l:"أغذية ومطاعم",items:["اشتراطات البلدية الصحية للمحل وموافقة الجهة المختصة بسلامة الغذاء.","شهادة صحية (لياقة طبية) لكل عامل يتعامل مع الغذاء، وتجديدها قبل انتهائها.","ترخيص الدفاع المدني للمطبخ ومعدات الغاز."]},
+ services:{l:"خدمات ومكاتب",items:["التأكد هل النشاط مهني يحتاج ترخيصًا من جهة مختصة (هندسي، قانوني، صحي، تعليمي…).","عقد إيجار المكتب وترخيص البلدية للموقع."]},
+ industry:{l:"ورشة / صناعة",items:["ترخيص بيئي من هيئة البيئة قبل التشغيل.","السجل الصناعي من وزارة التجارة والصناعة وترويج الاستثمار.","ترخيص الدفاع المدني للورشة، وتأمين المعدات."]}};
+const GUIDE=[
+ {id:"g1",t:"اختر نشاطك والشكل القانوني",sub:"قبل أي ورقة",why:"كل الخطوات التالية تعتمد على نوع النشاط وشكل الكيان، لأنهما يحددان الرسوم والموافقات المطلوبة.",
+  docs:[],where:[L("منصة استثمر بسهولة — قائمة الأنشطة","https://business.gov.om")],
+  tips:["<b>مؤسسة فردية:</b> يملكها شخص واحد، وهو مسؤول بأمواله الشخصية عن الديون.","<b>شركة الشخص الواحد:</b> مالك واحد لكن مسؤوليته محدودة برأس مال الشركة.","<b>شركة محدودة المسؤولية (ش.م.م):</b> شريكان أو أكثر، والأكثر شيوعًا للمشاريع الصغيرة والمتوسطة.","تأكد من أن نشاطك لا يحتاج موافقة مسبقة من جهة أخرى قبل التسجيل."],time:"يوم واحد"},
+ {id:"g2",t:"جهّز هويتك الرقمية",sub:"للدخول إلى المنصات الحكومية",why:"الدخول إلى «استثمر بسهولة» وبوابة الضرائب يتم بالهوية الرقمية العمانية.",
+  docs:["البطاقة الشخصية (أو بطاقة المقيم)","رقم هاتف باسمك مفعّلة عليه خدمة الهوية الرقمية عبر الهاتف، أو قارئ بطاقات"],where:[L("شرطة عمان السلطانية — البطاقة الشخصية","https://www.rop.gov.om"),L("فروع شركات الاتصالات لتفعيل الهوية عبر الهاتف","")],tips:["إذا لم تتمكن من تفعيلها، يمكن لمكتب «سند» إنجاز المعاملات نيابة عنك."],time:"يوم واحد"},
+ {id:"g3",t:"احجز الاسم التجاري",sub:"استثمر بسهولة",why:"الاسم يجب أن يكون غير مستخدم ومطابقًا لقواعد التسمية قبل إصدار السجل.",
+  docs:["ثلاثة أسماء مقترحة بالترتيب حسب الأفضلية"],where:[L("منصة استثمر بسهولة","https://business.gov.om")],tips:["تجنب الأسماء العامة جدًا أو المشابهة لعلامات معروفة."],time:"1–3 أيام عمل"},
+ {id:"g4",t:"جهّز مستندات التأسيس",sub:"قبل تقديم الطلب",why:"هذه المستندات تُرفع مع طلب السجل التجاري.",
+  docs:["البطاقة الشخصية لكل شريك أو مالك","عقد التأسيس (للشركات) — يُعَدّ عبر المنصة","عقد إيجار المقر","ما يثبت رأس المال إن كان مطلوبًا لنوع الكيان"],where:[L("منصة استثمر بسهولة","https://business.gov.om")],tips:["احفظ نسخة PDF واضحة من كل مستند في «ملفاتي» داخل مجلد «التأسيس»."],time:"1–2 أسبوع",add:[["عقد إيجار المقر","company"]]},
+ {id:"g5",t:"قدّم طلب السجل التجاري وادفع الرسوم",sub:"استثمر بسهولة أو مكتب سند",why:"السجل التجاري هو الوثيقة الأساسية لأي نشاط، وكل الخطوات التالية تحتاج رقمه.",
+  docs:["المستندات السابقة","وسيلة دفع إلكترونية للرسوم"],where:[L("منصة استثمر بسهولة","https://business.gov.om"),L("أقرب مكتب «سند» إن احتجت مساعدة","")],tips:["الرسوم تختلف حسب الكيان والنشاط ورأس المال.","السجل يُجدَّد دوريًا. أضفه هنا مع تاريخ انتهائه ليصلك تنبيه."],time:"5–10 أيام عمل",add:[["سجل تجاري","company"]]},
+ {id:"g6",t:"عضوية غرفة تجارة وصناعة عمان",sub:"تُستخرج مع التسجيل",why:"شهادة العضوية مطلوبة في كثير من المعاملات الحكومية والبنكية، وتُجدَّد مع السجل.",
+  docs:["رقم السجل التجاري"],where:[L("غرفة تجارة وصناعة عمان","https://chamberoman.om"),L("منصة استثمر بسهولة","https://business.gov.om")],tips:["احرص على أن يتطابق تاريخ تجديد العضوية مع تجديد السجل."],time:"يوم إلى أيام",add:[["عضوية غرفة التجارة والصناعة","company"]]},
+ {id:"g7",t:"رخصة البلدية للمقر",sub:"البلدية المختصة بموقعك",why:"تثبت أن الموقع مناسب لممارسة نشاطك، وتطلبها جهات أخرى بعد ذلك.",
+  docs:["السجل التجاري","عقد الإيجار مسجلًا لدى البلدية","مخطط أو صور المحل حسب الطلب"],where:[L("بلدية مسقط — للمقار في محافظة مسقط","https://www.mm.gov.om"),L("بلدية المحافظة التي يقع فيها مقرك","")],tips:["سجّل عقد الإيجار في البلدية أولًا، فهو شرط لإصدار الرخصة."],time:"أيام إلى أسبوعين",add:[["رخصة بلدية","company"]]},
+ {id:"g8",t:"ترخيص الدفاع المدني",sub:"للمحلات والمستودعات والمطاعم والورش",why:"يثبت توفر اشتراطات السلامة من الحريق في المقر.",
+  docs:["السجل التجاري","رخصة البلدية أو عقد الإيجار","طفايات وأنظمة إنذار حسب نوع المقر"],where:[L("هيئة الدفاع المدني والإسعاف","https://www.cdaa.gov.om")],tips:["بعض المكاتب الصغيرة قد لا تحتاجه. تأكد من البلدية أو الهيئة."],time:"أيام",add:[["ترخيص الدفاع المدني","company"]]},
+ {id:"g9",t:"موافقات خاصة بنشاطك",sub:"تتغير حسب القطاع",why:"بعض الأنشطة تحتاج تراخيص من جهات مختصة قبل البدء الفعلي.",docs:[],where:[],sector:true,tips:[],time:"حسب الجهة"},
+ {id:"g10",t:"افتح حساب الشركة البنكي",sub:"أي بنك تختاره",why:"لفصل أموال الشركة عن أموالك الشخصية، ولصرف الرواتب ودفع الرسوم.",
+  docs:["السجل التجاري","شهادة عضوية الغرفة","عقد التأسيس (للشركات)","بطاقات المفوضين بالتوقيع"],where:[L("فرع البنك الذي تختاره","")],tips:["المتطلبات تختلف من بنك لآخر، فاسأل البنك عن قائمته قبل الذهاب.","احفظ شهادة الـ IBAN هنا لأن الجهات تطلبها كثيرًا."],time:"أيام إلى أسبوعين",add:[["شهادة بنكية / IBAN","company"]]},
+ {id:"g11",t:"التسجيل في ضريبة الدخل",sub:"جهاز الضرائب",why:"التسجيل الضريبي إلزامي للشركات، ويكون عادة خلال 60 يومًا من بدء النشاط أو التسجيل.",
+  docs:["رقم السجل التجاري","بيانات النشاط والمسؤول","البطاقة الشخصية للمسؤول"],where:[L("بوابة جهاز الضرائب","https://tms.taxoman.gov.om")],tips:["احتفظ بدفاتر الدخل والمصروفات من أول يوم. قسم «المالية» هنا يساعدك."],time:"أيام",add:[["شهادة التسجيل الضريبي","company"]]},
+ {id:"g12",t:"ضريبة القيمة المضافة",sub:"عند تجاوز الحد",why:"التسجيل إلزامي إذا تجاوزت توريداتك السنوية 38,500 ر.ع أو يُتوقع تجاوزها، واختياري من 19,250 ر.ع. النسبة الأساسية 5%.",
+  docs:["رقم السجل التجاري","قيمة التوريدات والمصروفات السنوية المتوقعة","بيانات الحساب البنكي","بطاقة المسؤول"],where:[L("بوابة جهاز الضرائب","https://tms.taxoman.gov.om")],tips:["تابع إجمالي دخلك السنوي في «التقارير ← سنوي» لتعرف متى تقترب من الحد."],time:"أيام",add:[["شهادة ضريبة القيمة المضافة","company"]]},
+ {id:"g13",t:"توظيف العمال وتصاريح العمل",sub:"وزارة العمل",why:"لا يجوز تشغيل عامل وافد بدون تصريح عمل وعقد مسجل. الشركات المملوكة لأجانب يجب أن توظف عمانيًا واحدًا على الأقل.",
+  docs:["السجل التجاري","جواز العامل وصورته","عقد العمل","الفحص الطبي للعامل"],where:[L("وزارة العمل — الخدمات الإلكترونية","https://www.mol.gov.om"),L("شرطة عمان السلطانية — بطاقة المقيم","https://www.rop.gov.om")],tips:["سجّل عقد العامل خلال المدة المحددة بعد إصدار التصريح أو تجديده، وإلا يحق له الانتقال لصاحب عمل آخر.","بعد وصول العامل أضف بطاقته وجوازه وتصريحه في «الموظفون» ليصلك تنبيه قبل الانتهاء."],time:"أسبوع إلى أسابيع",add:[["تصريح العمل (ملكية)","employee"],["البطاقة الشخصية / بطاقة مقيم","employee"],["عقد العمل","employee"]]},
+ {id:"g14",t:"التسجيل في صندوق الحماية الاجتماعية",sub:"للموظفين العمانيين",why:"تسجيل الموظف العماني إلزامي، وهو إثبات رسمي لتوظيفه واشتراكاته.",
+  docs:["السجل التجاري","بيانات الموظف وعقده"],where:[L("صندوق الحماية الاجتماعية","https://www.spf.gov.om")],tips:["سدّد الاشتراكات الشهرية في موعدها وأضفها كالتزام شهري في «المالية»."],time:"أيام"},
+ {id:"g15",t:"التأمين",sub:"حماية المقر والمعدات والعمال",why:"يحميك من الخسائر الكبيرة، وبعض الجهات والعقود تشترطه.",
+  docs:["السجل التجاري","عقد الإيجار","قائمة المعدات والمركبات"],where:[L("شركات التأمين المرخصة","")],tips:["أضف وثيقة التأمين مع تاريخ انتهائها ليصلك تنبيه التجديد."],time:"أيام",add:[["وثيقة تأمين","company"]]},
+ {id:"g16",t:"المتابعة والتجديد السنوي",sub:"بعد البدء",why:"السجل والعضوية والرخص وتصاريح العمال كلها تنتهي وتحتاج تجديدًا، والإقرارات الضريبية لها مواعيد.",
+  docs:["كل المستندات السابقة"],where:[],tips:["أضف كل مستند هنا مع تاريخ انتهائه، والتطبيق ينبهك قبل الموعد.","جهّز القوائم المالية السنوية من «التقارير ← سنوي»."],time:"مستمر"}];
+VIEWS.guide=()=>{const g=S.db.settings.guide||{};const sec=S.db.settings.sector||"trade";const n=GUIDE.filter(x=>g[x.id]).length;
+  return`<div class="page-h"><div><h1>دليل تأسيس المشروع</h1><p>الخطوات بالترتيب لتأسيس نشاط تجاري في سلطنة عمان، والمستندات المطلوبة في كل خطوة ومن أين تُستخرج.</p></div></div>
+  <section class="panel"><div class="row"><b>تقدّمك</b><span class="sp"></span><span class="num">${n} / ${GUIDE.length}</span></div><div class="bar" style="margin-top:8px"><i style="width:${n/GUIDE.length*100}%"></i></div>
+   <h3 style="font-size:14px;margin:14px 0 6px">نوع نشاطك</h3><div class="chips">${Object.entries(SECTORS).map(([k,v])=>`<button class="chip${sec===k?" on":""}" data-act="gSector" data-v="${k}">${v.l}</button>`).join("")}</div></section>
+  <div style="display:flex;flex-direction:column;gap:10px">${GUIDE.map((x,i)=>{const done=!!g[x.id];const open=!done&&GUIDE.findIndex(y=>!g[y.id])===i;
+   const docs=x.sector?SECTORS[sec].items:x.docs;
+   return`<details class="gstep${done?" done":""}"${open?" open":""}><summary><span class="gnum">${done?I.check.replace("<svg",'<svg width="16" height="16"'):i+1}</span><span class="sp" style="min-width:0"><span class="gt">${esc(x.t)}</span><div class="gsub">${esc(x.sub)} · المدة التقريبية: ${esc(x.time)}</div></span></summary>
+    <div class="gbody"><div>${esc(x.why)}</div>
+    ${docs.length?`<div><h4>${x.sector?"المطلوب لنشاط «"+esc(SECTORS[sec].l)+"»":"المستندات المطلوبة"}</h4><ul>${docs.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`:""}
+    ${x.where.length?`<div><h4>من أين؟</h4><ul>${x.where.map(w=>`<li>${w.u?`<a href="${w.u}" target="_blank" rel="noopener">${esc(w.t)}</a>`:esc(w.t)}</li>`).join("")}</ul></div>`:""}
+    ${x.tips.length?`<div><h4>نصائح</h4><ul>${x.tips.map(t=>`<li>${t}</li>`).join("")}</ul></div>`:""}
+    <div class="row">${(x.add||[]).map(([t,o])=>`<button class="btn sm" data-act="gDoc" data-type="${esc(t)}" data-owner="${o}">${I.plus} أضف «${esc(t)}» لمستنداتي</button>`).join("")}<span class="sp"></span><button class="btn sm ${done?"":"primary"}" data-act="gToggle" data-id="${x.id}">${done?"إلغاء الإنجاز":I.check+" تمّت"}</button></div></div></details>`}).join("")}</div>
+  <section class="panel disclaimer">هذا الدليل للتوجيه العام وليس استشارة قانونية. الإجراءات والرسوم وأسماء المنصات قد تتغير، فتأكد من الجهة المختصة أو من أقرب مكتب «سند» قبل التقديم.
+   <div style="margin-top:6px">مراجع: <a href="https://www.wafeq.com/ar-om/مركز-الأعمال/لأصحاب-الأعمال/استخراج-سجل-تجاري-في-عمان" target="_blank" rel="noopener">وافق — استخراج سجل تجاري</a> · <a href="https://www.flick.network/en-om/oman-vat-registration" target="_blank" rel="noopener">حدود تسجيل القيمة المضافة</a> · <a href="https://www.middleeastbriefing.com/news/oman-labor-new-rules-foreign-companies-expatriate-workers/" target="_blank" rel="noopener">قواعد العمل الجديدة</a> · <a href="https://arnifi.com/blog/oman-company-setup-formation-process-requirements/" target="_blank" rel="noopener">خطوات ما بعد السجل</a></div></section>`};
+
+/* ========== library: my files ========== */
+const coOkLoose=r=>{const c=S.local.co||"all";if(c==="all")return true;const pid=focusP();if(pid)return r.projectId===pid;return!r.companyId||r.companyId===c};
+const baseName=n=>String(n||"ملف").replace(/\.[a-z0-9]{2,5}$/i,"");
+function libFileName(f,b){const ext=b.type==="application/pdf"?".pdf":b.type.startsWith("image/")?(b.type.includes("png")?".png":".jpg"):((f.meta.name||"").match(/\.[a-z0-9]{2,5}$/i)||[""])[0];return(f.name+ext).replace(/[\\/:*?"<>|]/g,"-")}
+const folderName=id=>(S.db.folders.find(x=>x.id===id)||{}).name||"";
+function folderPath(id){const out=[];let cur=S.db.folders.find(x=>x.id===id);let guard=0;while(cur&&guard++<20){out.unshift(cur);cur=S.db.folders.find(x=>x.id===cur.parentId)}return out}
+function folderOpts(){const out=[["","ملفاتي (الرئيسي)"]];const walk=(pid,depth)=>{S.db.folders.filter(f=>(f.parentId||"")===pid).sort((a,b)=>a.name.localeCompare(b.name,"ar")).forEach(f=>{out.push([f.id,"— ".repeat(depth+1)+f.name]);if(depth<6)walk(f.id,depth+1)})};walk("",0);return out}
+const kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+const fIcon=m=>m==="application/pdf"?I.pdf:(m||"").startsWith("image/")?I.img:I.file;
+VIEWS.files=()=>{const f=S.f.files||(S.f.files={folder:"",q:"",sort:"date"});const q=(f.q||"").toLowerCase();
+  if(f.folder&&!S.db.folders.some(x=>x.id===f.folder))f.folder="";
+  const folders=q?[]:S.db.folders.filter(coOkLoose).filter(x=>(x.parentId||"")===f.folder).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+  let files=S.db.files.filter(coOkLoose);files=q?files.filter(x=>(x.name+" "+(x.note||"")).toLowerCase().includes(q)):files.filter(x=>(x.folderId||"")===f.folder);
+  files.sort(f.sort==="name"?(a,b)=>a.name.localeCompare(b.name,"ar"):(a,b)=>(b.u||0)-(a.u||0));
+  const path=folderPath(f.folder);const cnt=id=>S.db.files.filter(x=>x.folderId===id).length+S.db.folders.filter(x=>x.parentId===id).length;
+  return`${demoBar()}<div class="page-h"><div><h1>ملفاتي</h1><p>مجلداتك وملفاتك بأسماء تختارها بنفسك.</p></div><span class="sp"></span><button class="btn" data-act="newFolder">${I.folder} مجلد جديد</button><button class="btn primary" data-act="newLib">${I.plus} إضافة ملف</button></div>
+  <input class="search" id="libQ" type="search" placeholder="ابحث في كل الملفات بالاسم أو الملاحظة…" value="${esc(f.q||"")}">
+  ${q?"":`<div class="crumbs"><button data-act="openFolder" data-id="">ملفاتي</button>${path.map(p=>`<span>‹</span><button data-act="openFolder" data-id="${p.id}">${esc(p.name)}</button>`).join("")}${f.folder?`<span class="sp"></span><button class="btn sm ghost" data-act="editFolder" data-id="${f.folder}">✎ المجلد</button>${files.length?`<button class="btn sm" data-act="shareFolder">${I.share} مشاركة المجلد</button>`:""}`:""}</div>`}
+  ${folders.length?`<div class="folders">${folders.map(x=>`<button class="folder" data-act="openFolder" data-id="${x.id}">${I.folder}<span class="t">${esc(x.name)}</span><span class="s">${cnt(x.id)} عنصر${x.companyId?" · "+esc(coName(x.companyId)):""}</span></button>`).join("")}</div>`:""}
+  <section class="panel"><div class="row" style="margin-bottom:4px"><b>${q?"نتائج البحث":"الملفات"}</b><span class="muted num" style="font-size:12px">${files.length}</span><span class="sp"></span><div class="chips"><button class="chip${f.sort!=="name"?" on":""}" data-act="libSort" data-v="date">الأحدث</button><button class="chip${f.sort==="name"?" on":""}" data-act="libSort" data-v="name">بالاسم</button></div></div>
+  ${files.length?`<div class="list">${files.map(x=>`<button class="item" data-act="openLib" data-id="${x.id}"><span class="ico" style="color:var(${x.meta&&x.meta.mime==="application/pdf"?"--bad":"--brand"})">${fIcon(x.meta&&x.meta.mime)}</span><span class="main"><span class="t">${esc(x.name)}</span><div class="s">${kb(x.meta?x.meta.size:0)} · ${fdate(x.date)}${q&&x.folderId?" · "+esc(folderName(x.folderId)):""}${x.note?" · "+esc(x.note):""}</div></span></button>`).join("")}</div>`:`<div class="empty">${q?"لا توجد ملفات بهذا الاسم.":"لا توجد ملفات هنا بعد. اضغط «إضافة ملف» واختر ملفًا أو صوّر ورقة."}</div>`}</section>`};
+function formFolder(fo){fo=fo||{};const cur=(S.f.files||{}).folder||"";
+  openForm({title:fo.id?"تعديل المجلد":"مجلد جديد",fields:[{k:"name",label:"اسم المجلد",req:1,val:fo.name,ph:"مثال: عقود العملاء"},
+   {k:"parentId",label:"داخل",type:"select",options:folderOpts().filter(o=>!fo.id||(o[0]!==fo.id&&!folderPath(o[0]).some(p=>p.id===fo.id))),val:fo.id?fo.parentId||"":cur},
+   {k:"companyId",label:"تابع لشركة",type:"select",options:[["","عام (كل الشركات)"],...coOpts()],val:fo.companyId??(S.local.co!=="all"&&!focusP()?S.local.co:(focusP()?defCo():""))},
+   ...(S.db.projects.length?[{k:"projectId",label:"تابع لمشروع (اختياري)",type:"select",options:projOpts(),val:fo.projectId??focusP()}]:[])],
+   onSave:async v=>{const r=upsert("folders",{...fo,...v,id:fo.id||uid()});await save();closeModal();if(!fo.id){S.f.files={...(S.f.files||{}),folder:r.id,q:""}}render();toast(fo.id?"تم تعديل المجلد":"تم إنشاء المجلد. اضغط «إضافة ملف» لوضع ملفاتك فيه.",3600)},
+   onDelete:fo.id&&(()=>{const kids=S.db.folders.filter(x=>x.parentId===fo.id).length+S.db.files.filter(x=>x.folderId===fo.id).length;ask(kids?"المجلد ليس فارغًا. سيتم نقل محتوياته إلى المجلد الأعلى ثم حذفه.":"حذف هذا المجلد؟",async()=>{const up=fo.parentId||"";S.db.folders.forEach(x=>{if(x.parentId===fo.id){x.parentId=up;x.u=now()}});S.db.files.forEach(x=>{if(x.folderId===fo.id){x.folderId=up;x.u=now()}});remove("folders",fo.id);S.f.files.folder=up;await save();closeModal();render()})})})}
+function formLib(f){f=f||{};const cur=(S.f.files||{}).folder||"";const isNew=!f.id;
+  openForm({title:isNew?"إضافة ملفات":"تعديل الملف",multiName:isNew,fields:[...(isNew?[{type:"files"}]:[{k:"name",label:"اسم الملف",req:1,val:f.name}]),
+   {k:"folderId",label:"المجلد",type:"select",options:folderOpts(),val:isNew?cur:f.folderId||""},
+   {k:"companyId",label:"تابع لشركة",type:"select",options:[["","عام"],...coOpts()],val:f.companyId??(focusP()?defCo():S.local.co!=="all"?S.local.co:"")},
+   ...(S.db.projects.length?[{k:"projectId",label:"تابع لمشروع (اختياري)",type:"select",options:projOpts(),val:f.projectId??focusP()}]:[]),
+   {k:"note",label:"ملاحظة (اختياري)",val:f.note,ph:"مثال: موقّع من العميل"}],
+   onSave:async v=>{if(isNew){if(!(S.pending||[]).length)return toast("اختر ملفًا أو صوّر ورقة أولًا");const names=[...document.querySelectorAll(".fname")].map(x=>x.value.trim());const metas=await storeFiles(S.pending);
+      metas.forEach((m,i)=>{upsert("files",{id:uid(),name:names[i]||baseName(m.name),folderId:v.folderId,companyId:v.companyId,projectId:v.projectId||"",note:v.note,meta:m,date:today()})});
+      await save();closeModal();S.f.files={...(S.f.files||{}),folder:v.folderId,q:""};if(S.view!=="files"&&S.view!=="proj")go("files");else render();toast(`تم حفظ ${metas.length} ملف في «${folderName(v.folderId)||"ملفاتي"}». اضغط على أي ملف لعرضه أو مشاركته.`,4200)}
+     else{upsert("files",{...f,...v});await save();closeModal();render();toast("تم حفظ التعديل")}},
+   onDelete:f.id&&(()=>ask("حذف هذا الملف نهائيًا؟",async()=>{await fileDel(f.meta.id);remove("files",f.id);await save();closeModal();render()}))});
+  if(isNew)S.form.base=f;if(isNew)setTimeout(()=>{const n=$("#f_names");if(n)n.innerHTML='<span class="muted" style="font-size:12.5px">بعد الاختيار تظهر هنا خانة لتسمية كل ملف.</span>'},0)}
+async function openLib(id){const f=S.db.files.find(x=>x.id===id);if(!f)return;const b=await getBlob(f.meta.id);if(b)S.blobs[f.meta.id]=b;
+  const u=b?URL.createObjectURL(b):"";const isImg=b&&b.type.startsWith("image/"),isPdf=b&&b.type==="application/pdf";
+  modal(`<div class="row"><span class="ico">${fIcon(f.meta.mime)}</span><h2 style="flex:1;min-width:0;font-size:17px;overflow-wrap:anywhere">${esc(f.name)}</h2></div>
+  <dl class="kv"><dt>المجلد</dt><dd>${esc(folderName(f.folderId)||"ملفاتي")}</dd><dt>الشركة</dt><dd>${f.companyId?esc(coName(f.companyId)):"عام"}</dd><dt>الحجم</dt><dd class="num" style="text-align:right">${kb(f.meta.size)}</dd><dt>أضيف</dt><dd>${fdate(f.date)}</dd>${f.note?`<dt>ملاحظة</dt><dd>${esc(f.note)}</dd>`:""}</dl>
+  <div class="viewer"${u?` data-url="${u}"`:""}>${!b?`<div class="empty">الملف غير موجود على هذا الجهاز بعد. اسحب الشاشة للأسفل للمزامنة ثم أعد فتحه.</div>`:isImg?`<img src="${u}" alt="${esc(f.name)}">`:isPdf?`<iframe src="${u}" title="${esc(f.name)}"></iframe>`:`<div class="empty">لا توجد معاينة لهذا النوع. استخدم «فتح» أو «مشاركة».</div>`}</div>
+  <div class="row-end"><button class="btn ghost" data-act="close">إغلاق</button><span class="sp"></span>${u?`<a class="btn" href="${u}" target="_blank" rel="noopener">فتح</a>`:""}<button class="btn" data-act="editLib" data-id="${id}">✎ إعادة تسمية / نقل</button><button class="btn primary" data-act="shareLib" data-id="${id}">${I.share} مشاركة</button></div>`,true)}
+
+/* ========== lock zoom: no pinch, no double-tap, no input zoom ========== */
+(function(){const meta=document.querySelector('meta[name=viewport]');const v="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover";if(meta)meta.setAttribute("content",v);else{const m=document.createElement("meta");m.name="viewport";m.content=v;document.head.appendChild(m)}
+  const stop=e=>e.preventDefault();["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,stop,{passive:false}));
+  document.addEventListener("touchmove",e=>{if(e.touches.length>1||(e.scale&&e.scale!==1))e.preventDefault()},{passive:false});
+  let last=0;document.addEventListener("touchend",e=>{const n=Date.now();if(n-last<320&&!e.target.closest("input,textarea,select,button,a,label,[data-act],[data-go],[data-ob]"))e.preventDefault();last=n},{passive:false});
+  document.addEventListener("wheel",e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
+  document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&["+","-","=","0"].includes(e.key))e.preventDefault()})})();
+
+/* ========== gestures: swipe between tabs, pull to refresh ========== */
+let G=null;
+function ptrShow(d,label,spin){const p=$("#ptr");if(!p)return;p.style.transform=`translate(-50%,${Math.min(d,90)-70}px)`;p.style.opacity=Math.min(1,d/60);p.classList.toggle("spin",!!spin);p.querySelector("svg").style.rotate=spin?"":(d*3)+"deg";p.querySelector("span").textContent=label}
+function ptrHide(){const p=$("#ptr");if(!p)return;p.style.transition="transform .25s,opacity .25s";ptrShow(0,"",false);setTimeout(()=>{if(p)p.style.transition=""},260)}
+async function doRefresh(){ptrShow(80,S.sync.connected?"جارٍ المزامنة…":"جارٍ التحديث…",true);
+  if(S.sync.connected){await syncNow(false)}else{S.anim="fade";render();toast("تم تحديث البيانات. Google Drive غير متصل، اربطه من الإعدادات ليتزامن مع أجهزتك.",4200)}
+  ptrShow(80,"تم",false);setTimeout(ptrHide,350)}
+document.addEventListener("touchstart",e=>{if($("#scrim")||$(".ob")||e.touches.length>1){G=null;return}const t=e.touches[0];const w=window.innerWidth;
+  G={x:t.clientX,y:t.clientY,t:Date.now(),top:window.scrollY<=2,el:(e.target&&e.target.nodeType===1?e.target:(e.target&&e.target.parentElement)||document.body),edge:t.clientX<22||t.clientX>w-22,pull:0}},{passive:true});
+document.addEventListener("touchmove",e=>{if(!G)return;const t=e.touches[0];const dx=t.clientX-G.x,dy=t.clientY-G.y;
+  if(G.top&&dy>8&&Math.abs(dy)>Math.abs(dx)*1.4&&!G.el.closest("textarea,.chart-wrap")){G.pull=dy*.5;ptrShow(G.pull,G.pull>=70?"أفلت للتحديث":"اسحب للتحديث",false)}},{passive:true});
+document.addEventListener("touchend",e=>{if(!G)return;const g=G;G=null;const t=e.changedTouches[0];const dx=t.clientX-g.x,dy=t.clientY-g.y,dt=Date.now()-g.t;
+  if(g.pull){if(g.pull>=70)doRefresh();else ptrHide();return}
+  if(g.edge||dt>700||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8)return;
+  if(g.el.closest("input,textarea,select,.chips,.chart-wrap,.thumbs,.folders,.nav,.top,.crumbs"))return;
+  const i=ORDER.indexOf(baseTab(S.view));const n=dx>0?i+1:i-1;if(n>=0&&n<ORDER.length)go(ORDER[n])},{passive:true});
+
+/* ========== events ========== */
+function act(a,ds,el){switch(a){
+ case"close":closeModal();break;
+ case"askYes":{const f=S.askFn;S.askFn=null;f&&f();break}
+ case"formDel":S.form&&S.form.onDelete&&S.form.onDelete();break;
+ case"newCo":formCo();break;case"editCo":formCo(S.db.companies.find(x=>x.id===ds.id));break;
+ case"newDoc":formDoc(null,ds.emp?{ownerType:"employee",ownerId:ds.emp}:null);break;
+ case"editDoc":formDoc(S.db.docs.find(x=>x.id===ds.id));break;
+ case"renewDoc":{const d=S.db.docs.find(x=>x.id===ds.id);formDoc({...d,issue:today(),expiry:d.expiry?addDays(365,d.expiry):""});break}
+ case"openDoc":openDoc(ds.id);break;case"viewFile":viewFile(ds.id,ds.doc);break;
+ case"delFile":ask("حذف هذا المرفق؟",async()=>{const d=S.db.docs.find(x=>x.id===ds.doc);d.files=d.files.filter(f=>f.id!==ds.id);d.u=now();await fileDel(ds.id);await save();openDoc(d.id);render()});break;
+ case"newEmp":formEmp();break;case"editEmp":formEmp(S.db.employees.find(x=>x.id===ds.id));break;case"openEmp":openEmp(ds.id);break;
+ case"newTx":formTx(null,ds.kind,ds.proj);break;case"editTx":formTx(S.db.tx.find(x=>x.id===ds.id));break;
+ case"newBill":formBill();break;case"editBill":formBill(S.db.bills.find(x=>x.id===ds.id));break;
+ case"payBill":(async()=>{const b=S.db.bills.find(x=>x.id===ds.id);upsert("tx",{id:uid(),companyId:b.companyId,kind:"out",category:b.category,amount:+b.amount,date:today(),note:b.name+" — "+MONTHS[new Date().getMonth()],projectId:""});b.lastPaid=ym(new Date());b.u=now();await save();render();toast("تم تسجيل السداد")})();break;
+ case"newProj":formProj();break;case"editProj":formProj(S.db.projects.find(x=>x.id===ds.id));break;
+ case"docF":S.f.docs[ds.k]=ds.v;render();break;
+ case"mTab":S.f.moneyTab=ds.v;render();break;
+ case"txMon":{const[y,m]=(S.f.txMonth||ym(new Date())).split("-").map(Number);S.f.txMonth=ym(new Date(y,m-1+(+ds.d),1));render();break}
+ case"per":S.f.per=ds.v;render();break;
+ case"askClaude":copyText(summaryText());break;
+ case"help":openHelp(baseHelpKey(S.view));break;
+ case"helpKey":openHelp(ds.k);break;
+ case"hideTip":S.local.tips={...(S.local.tips||{}),[ds.v]:1};saveLocal();render();toast("يمكنك دائمًا الضغط على ؟ أعلى الشاشة لشرح أي صفحة",3500);break;
+ case"tour":showTour();break;
+ case"openProj":S.f.proj=ds.id;if(S.view==="proj"){S.anim="fade";render();window.scrollTo(0,0)}else go("proj");break;
+ case"scopeTo":S.local.co=ds.v;saveLocal();if(ds.to&&ds.to!==S.view)go(ds.to);else{S.anim="fade";render()}toast("تعرض الآن: "+scopeName()+". اختر «كل الشركات والمشاريع» من الأعلى لعرض الكل.",3800);break;
+ case"scopeAll":S.local.co="all";saveLocal();S.anim="fade";render();break;
+ case"newProjDoc":formDoc({ownerType:"project",projectId:ds.id});break;
+ case"newLibProj":formLib({projectId:ds.id,companyId:(projById(ds.id)||{}).companyId});break;
+ case"about":modal(aboutPanel().replace('class="panel about"','class="about"')+`<div class="row-end"><span class="sp"></span><button class="btn primary" data-act="close">إغلاق</button></div>`);break;
+ case"featGo":closeModal();{const f=FEAT[ds.k];if(f.view&&f.view!==S.view)go(f.view);if(f.act)setTimeout(()=>act(f.act,{kind:f.kind||""}),60)}break;
+ case"newLib":formLib();break;case"editLib":formLib(S.db.files.find(x=>x.id===ds.id));break;case"openLib":openLib(ds.id);break;
+ case"newFolder":formFolder();break;case"editFolder":formFolder(S.db.folders.find(x=>x.id===ds.id));break;
+ case"openFolder":S.f.files={...(S.f.files||{}),folder:ds.id||"",q:""};if(S.view!=="files")go("files");else{S.anim="fade";render();window.scrollTo(0,0)}break;
+ case"libSort":S.f.files.sort=ds.v;render();break;
+ case"shareLib":(async()=>{const f=S.db.files.find(x=>x.id===ds.id);const b=S.blobs[f.meta.id]||await getBlob(f.meta.id);if(!b)return toast("الملف غير موجود على هذا الجهاز. اسحب للتحديث للمزامنة.");shareSheet(f.name,f.note||f.name,[new File([b],libFileName(f,b),{type:b.type})])})();break;
+ case"shareFolder":(async()=>{const list=S.db.files.filter(x=>(x.folderId||"")===(S.f.files.folder||"")&&coOkLoose(x));const files=[];for(const f of list){const b=S.blobs[f.meta.id]||await getBlob(f.meta.id);if(b)files.push(new File([b],libFileName(f,b),{type:b.type}))}if(!files.length)return toast("لا توجد ملفات في هذا المجلد");shareSheet(folderName(S.f.files.folder)||"ملفاتي",list.map(f=>"• "+f.name).join("\n"),files)})();break;
+ case"gToggle":{const g={...(S.db.settings.guide||{})};g[ds.id]=!g[ds.id];S.db.settings={...S.db.settings,guide:g,u:now()};save();render();if(g[ds.id]){const n=Object.values(g).filter(Boolean).length;toast(n>=GUIDE.length?"أحسنت! أنهيت كل خطوات التأسيس.":`ممتاز، أنجزت ${n} من ${GUIDE.length}. افتح الخطوة التالية.`,3200)}break}
+ case"gSector":S.db.settings={...S.db.settings,sector:ds.v,u:now()};save();render();break;
+ case"gDoc":formDoc({type:ds.type,ownerType:ds.owner||"company"});break;
+ case"refresh":doRefresh();break;
+ case"doShare":{const d=S.shareData;if(d)share(d).then(ok=>{if(ok)closeModal()});break}
+ case"shareDoc":(async()=>{const d=S.db.docs.find(x=>x.id===ds.id);const files=await docFiles([d]);shareSheet(d.type,docText(d),files)})();break;
+ case"shareFile":(async()=>{const d=S.db.docs.find(x=>x.id===ds.doc);const f=d.files.find(x=>x.id===ds.id);const b=S.blobs[f.id]||await getBlob(f.id);if(!b)return toast("المرفق غير موجود");const file=new File([b],fileName(f,b),{type:b.type});shareSheet(d.type,docText(d),[file])})();break;
+ case"shareEmp":(async()=>{const e=S.db.employees.find(x=>x.id===ds.id);const docs=S.db.docs.filter(d=>d.ownerType==="employee"&&d.ownerId===e.id);const files=await docFiles(docs);shareSheet("ملف "+e.name,["ملف الموظف: "+e.name,e.job?"الوظيفة: "+e.job:"","الشركة: "+coName(e.companyId),"",...docs.map(d=>"• "+d.type+(d.number?" ("+d.number+")":"")+(d.expiry?" — ينتهي "+d.expiry:""))].filter(x=>x!=="").join("\n"),files)})();break;
+ case"shareList":(async()=>{const docs=(S.docList||[]).filter(d=>(d.files||[]).length);const files=await docFiles(docs);shareSheet("مستندات",docs.map(d=>"• "+ownerLabel(d)+" — "+d.type+(d.expiry?" (ينتهي "+d.expiry+")":"")).join("\n"),files)})();break;
+ case"shareReport":{const per=S.f.per||"month";const bk=buckets(per);const cur=bk[bk.length-1];const rows=txF().filter(t=>t.date>=bk[0].a&&t.date<=cur.b).sort((a,b)=>a.date.localeCompare(b.date));
+   const csv="\ufeff"+["التاريخ,النوع,التصنيف,المبلغ,الشركة,المشروع,البيان",...rows.map(t=>[t.date,t.kind==="in"?"دخل":"مصروف",t.category,(+t.amount).toFixed(3),coName(t.companyId),(S.db.projects.find(p=>p.id===t.projectId)||{}).name||"",t.note||""].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))].join("\n");
+   const file=new File([csv],"تقرير-مالي-"+today()+".csv",{type:"text/csv"});
+   const text=["تقرير إدارة أعمالي — "+today(),...bk.map(b=>`${b.l}: دخل ${money(b.i)} | مصروف ${money(b.o)} | صافي ${money(b.n)}`)].join("\n");
+   shareSheet("التقرير المالي",text,[file]);break}
+ case"copyReport":{const per=S.f.per||"month";const bk=buckets(per);copyText(["تقرير إدارة أعمالي — "+today(),...bk.map(b=>`${b.a}${b.a!==b.b?" → "+b.b:""}: دخل ${money(b.i)} | مصروف ${money(b.o)} | صافي ${money(b.n)}`)].join("\n"));break}
+ case"clearDemo":ask("حذف كل البيانات التجريبية والبدء ببياناتك؟",async()=>{COLL.forEach(c=>S.db[c].filter(x=>String(x.id).startsWith("demo-")).forEach(x=>remove(c,x.id)));delete S.db.demo;S.db.settings={...S.db.settings,guide:{},u:now()};S.local.co="all";await save();await saveLocal();closeModal();S.view="prefs";render();toast("ابدأ بإضافة شركتك")},"حذف");break;
+ case"exportBk":exportBackup();break;
+ case"wipe":ask("مسح كل البيانات والمرفقات من هذا الجهاز فقط؟ نسخة Google Drive لا تتأثر.",async()=>{for(const k of await fileKeys())await fileDel(k);S.db=emptyDB();S.sync.synced=[];await kvSet("db",S.db);await saveLocal();closeModal();render()},"مسح");break;
+ case"syncBtn":if(S.sync.connected)syncNow(false);else{S.view="prefs";render()}break;
+ case"disconnect":(async()=>{S.sync.connected=false;S.token=null;await saveLocal();setSync("off");render();toast("تم فصل المزامنة على هذا الجهاز")})();break;
+}}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){if(g.dataset.filter){S.f.docs={who:"all",st:g.dataset.filter,q:""}}if(g.dataset.tab)S.f.moneyTab=g.dataset.tab;if(g.dataset.go===S.view&&(g.dataset.filter||g.dataset.tab)){closeModal();render()}else go(g.dataset.go);return}
+  const a=e.target.closest("[data-act]");if(a){e.preventDefault();act(a.dataset.act,a.dataset,a)}});
+document.addEventListener("submit",async e=>{e.preventDefault();
+  if(e.target.id==="frm"&&S.form){const o=S.form;const v={};for(const f of flatFields(o.fields)){if(!f.k)continue;const el=$("#f_"+f.k);if(!el)continue;v[f.k]=el.value.trim();if(f.req&&!v[f.k]){el.focus();toast("أكمل الحقل: "+f.label);return}}await o.onSave(v)}
+  if(e.target.id==="syncForm"){S.sync.clientId=$("#s_cid").value.trim();S.sync.pass=$("#s_pass").value;await saveLocal();if(!S.sync.clientId||S.sync.pass.length<6)return toast("أدخل معرّف العميل وكلمة تشفير من 6 أحرف على الأقل");syncNow(false)}});
+document.addEventListener("change",async e=>{const t=e.target;
+  if(t.id==="coSel"){S.local.co=t.value;await saveLocal();render()}
+  else if(t.id==="f_pick"||t.id==="f_cam"){const old=[...document.querySelectorAll(".fname")].map(x=>x.value);S.pending=(S.pending||[]).concat([...t.files]);t.value="";if(S.form&&S.form.multiName){$("#f_names").innerHTML=S.pending.map((f,i)=>`<div class="fname-row"><span class="muted num" style="font-size:12px">${i+1}</span><input class="fname" aria-label="اسم الملف ${i+1}" value="${esc(old[i]??baseName(f.name))}"></div>`).join("")+`<div class="muted" style="font-size:12px">يمكنك تعديل اسم كل ملف قبل الحفظ.</div>`}else $("#f_names").textContent=S.pending.map(f=>f.name).join("، ")}
+  else if(t.id==="addPick"||t.id==="addCam"){const d=S.db.docs.find(x=>x.id===t.dataset.doc);const fs=await storeFiles([...t.files]);d.files=(d.files||[]).concat(fs);d.u=now();await save();openDoc(d.id);render();toast("تم إرفاق الملف")}
+  else if(t.id==="s_alert"){S.db.settings={...S.db.settings,alertDays:Math.max(1,+t.value||60),u:now()};await save()}
+  else if(t.id==="s_theme"){S.local.theme=t.value;applyTheme();await saveLocal()}
+  else if(t.id==="importBk"&&t.files[0])importBackup(t.files[0])});
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="docQ"||t.id==="empQ"||t.id==="libQ"){if(t.id==="docQ")S.f.docs.q=t.value;else if(t.id==="libQ")S.f.files.q=t.value;else S.f.empQ=t.value;const pos=t.selectionStart;clearTimeout(S.qt);S.qt=setTimeout(()=>{render();const n=$("#"+t.id);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}},250)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+function applyTheme(){if(S.local.theme)document.documentElement.dataset.theme=S.local.theme;else delete document.documentElement.dataset.theme}
+
+/* ========== boot ========== */
+(async()=>{await idbOpen();
+  S.db=await kvGet("db");S.local={...S.local,...(await kvGet("local")||{})};S.sync={...S.sync,...(await kvGet("sync")||{})};
+  if(!S.db){S.db=seedDemo();await kvSet("db",S.db)}else{S.db=normalizeDB(S.db);await kvSet("db",S.db)}
+  applyTheme();if(S.sync.connected)S.syncState="wait";const h=location.hash.slice(1);if(VIEWS[h])S.view=h;try{history.replaceState({v:S.view},"","#"+S.view)}catch(e){}render();if(!S.local.onboarded)showTour();
+  if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude\.ai|claudeusercontent/.test(location.host))navigator.serviceWorker.register("sw.js").catch(()=>{})})();
+</script>
+
+</body>
+</html>
