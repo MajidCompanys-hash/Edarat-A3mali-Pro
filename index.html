@@ -239,6 +239,9 @@ table.cf td:first-child{min-width:118px;font-size:13px}
 .keys{display:grid;grid-template-columns:repeat(3,72px);gap:14px;direction:ltr}
 .keys button{width:72px;height:72px;border-radius:50%;font-size:26px;background:var(--surface);border:1px solid var(--line);cursor:pointer;display:grid;place-items:center;font-family:var(--f-display)}
 .keys button svg{width:28px;height:28px;color:var(--brand)}
+.faceid{width:120px;height:120px;border-radius:34px;background:var(--brand);color:var(--brand-ink);border:0;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 30px color-mix(in srgb,var(--brand) 35%,transparent)}
+.faceid svg{width:64px;height:64px}.faceid.shake{animation:shake .35s}
+.lock .btn svg{width:20px;height:20px}
 .about{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-block:22px}
 .about .mono{width:64px;height:64px;border-radius:20px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:26px;margin-bottom:6px}
 .about .nm{font-family:var(--f-display);font-size:19px;font-weight:700}
@@ -638,7 +641,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="2.0";
+const APP_VER="2.1";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -1365,33 +1368,44 @@ async function runOcr(){const img=(S.pending||[]).find(f=>f.type.startsWith("ima
  catch(e){toast("تعذرت القراءة. تأكد من الاتصال بالإنترنت، فأول مرة يُحمَّل محرك القراءة.",4500)}finally{const bb=$("#ocrBtn");if(bb){bb.disabled=false;bb.innerHTML=old}}}
 
 /* ---------- app lock (PIN + Face ID) ---------- */
-const LK=()=>S.local.lock||{};const lockActive=()=>!!LK().pin;
+const LK=()=>S.local.lock||{};const lockActive=()=>!!(LK().pin||LK().bio);
+const bioOK=()=>!!window.PublicKeyCredential&&window.isSecureContext;
 async function sha(s){return b64(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))}
-function showLock(){if(!lockActive()||$("#lock"))return;closeModal();const el=document.createElement("div");el.id="lock";el.className="lock";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","قفل التطبيق");document.body.appendChild(el);S.pinBuf="";drawLock();
- el.addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(b)pinPress(b.dataset.k)})}
-function drawLock(msg,bad){const el=$("#lock");if(!el)return;const l=LK();const n=l.len||4;
+function showLock(){if(!lockActive()||$("#lock"))return;closeModal();const el=document.createElement("div");el.id="lock";el.className="lock";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","قفل التطبيق");document.body.appendChild(el);S.pinBuf="";S.lockMode=LK().bio?"bio":"pin";drawLock();
+ el.addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(b)pinPress(b.dataset.k)});
+ if(LK().bio)setTimeout(()=>{if($("#lock")&&S.lockMode==="bio"&&!document.hidden)bioUnlock(true)},350)}
+function drawLock(msg,bad){const el=$("#lock");if(!el)return;const l=LK();
+ if(S.lockMode==="bio"&&l.bio){el.innerHTML=`<button class="faceid${bad?" shake":""}" data-k="bio" aria-label="الفتح بـ Face ID">${I.face}</button><h2 style="font-size:21px">${esc(msg||"افتح بـ Face ID")}</h2><p class="muted" style="margin:0;max-width:300px">${S.bioBusy?"انظر إلى الشاشة…":"اضغط الأيقونة إذا لم تظهر نافذة Face ID تلقائيًا."}</p>
+  <button class="btn primary" data-k="bio" style="min-width:220px;justify-content:center">${I.face} الفتح بـ Face ID</button>
+  ${l.pin?`<button class="btn ghost sm" data-k="usepin">استخدام رمز الدخول</button>`:`<button class="btn ghost sm" data-k="forgot">تعذر الفتح؟</button>`}`;return}
+ const n=l.len||4;
  el.innerHTML=`<div class="ob-ill" style="width:76px;height:76px;border-radius:22px">${I.lock}</div><h2 style="font-size:20px">${esc(msg||"أدخل رمز الدخول")}</h2><div class="pin-dots${bad?" shake":""}">${Array.from({length:n},(_,i)=>`<i class="${i<S.pinBuf.length?"on":""}"></i>`).join("")}</div>
- <div class="keys">${[1,2,3,4,5,6,7,8,9].map(k=>`<button data-k="${k}">${k}</button>`).join("")}${l.bio?`<button data-k="bio" aria-label="Face ID">${I.face}</button>`:"<span></span>"}<button data-k="0">0</button><button data-k="del" aria-label="مسح">⌫</button></div>
+ <div class="keys">${[1,2,3,4,5,6,7,8,9].map(k=>`<button data-k="${k}">${k}</button>`).join("")}${l.bio?`<button data-k="usebio" aria-label="Face ID">${I.face}</button>`:"<span></span>"}<button data-k="0">0</button><button data-k="del" aria-label="مسح">⌫</button></div>
  <button class="btn ghost sm" data-k="forgot">نسيت الرمز؟</button>`}
-async function pinPress(k){const l=LK();if(k==="bio")return bioUnlock();if(k==="forgot")return lockForgot();if(k==="back")return drawLock();if(k==="wipe")return wipeDevice();
+async function pinPress(k){const l=LK();if(k==="bio")return bioUnlock();if(k==="usebio"){S.lockMode="bio";drawLock();return bioUnlock()}if(k==="usepin"){S.lockMode="pin";S.pinBuf="";return drawLock()}if(k==="forgot")return lockForgot();if(k==="back")return drawLock();if(k==="wipe")return wipeDevice();
+ if(S.lockMode==="bio"||!l.pin)return;
  if(S.pinWait&&Date.now()<S.pinWait)return drawLock(`محاولات كثيرة. انتظر ${Math.ceil((S.pinWait-Date.now())/1000)} ثانية`);
  if(k==="del"){S.pinBuf=S.pinBuf.slice(0,-1);return drawLock()}if(!/^\d$/.test(k))return;if(S.pinBuf.length>=(l.len||4))return;S.pinBuf+=k;drawLock();
  if(S.pinBuf.length===(l.len||4)){const h=await sha(l.salt+S.pinBuf);if(h===l.pin)return unlock();S.pinFails=(S.pinFails||0)+1;S.pinBuf="";if(S.pinFails>=5){S.pinWait=Date.now()+30000;S.pinFails=0;return drawLock("محاولات كثيرة. انتظر 30 ثانية",true)}drawLock("رمز غير صحيح، حاول مرة أخرى",true)}}
-function unlock(){const el=$("#lock");if(el)el.remove();S.pinBuf="";S.pinFails=0;S.hiddenAt=0;if(!S.local.onboarded)showTour()}
-function lockForgot(){const el=$("#lock");el.innerHTML=`<div class="ob-ill" style="width:76px;height:76px;border-radius:22px">${I.lock}</div><h2 style="font-size:20px">نسيت الرمز؟</h2><p style="max-width:360px;text-align:center;margin:0;color:var(--muted)">لا يمكن استرجاع الرمز. يمكنك مسح بيانات التطبيق من هذا الجهاز، ثم ربط Google Drive من جديد بنفس كلمة التشفير لاسترجاع بياناتك المتزامنة. أي بيانات لم تتزامن ستُفقد.</p><div class="row" style="justify-content:center"><button class="btn" data-k="back">رجوع</button><button class="btn danger" data-k="wipe">مسح بيانات هذا الجهاز</button></div>`}
+function unlock(){const el=$("#lock");if(el)el.remove();S.pinBuf="";S.pinFails=0;S.hiddenAt=0;S.bioBusy=false;if(!S.local.onboarded)showTour()}
+function lockForgot(){const el=$("#lock");const l=LK();el.innerHTML=`<div class="ob-ill" style="width:76px;height:76px;border-radius:22px">${I.lock}</div><h2 style="font-size:20px">${l.pin?"نسيت الرمز؟":"تعذر الفتح بـ Face ID؟"}</h2><p style="max-width:360px;text-align:center;margin:0;color:var(--muted)">${l.pin?"لا يمكن استرجاع الرمز.":"إذا فشل Face ID يعرض الآيفون عادةً رمز قفل الجهاز نفسه بديلًا. اضغط «رجوع» وحاول مرة أخرى."} وإن تعذر الفتح نهائيًا يمكنك مسح بيانات التطبيق من هذا الجهاز، ثم ربط Google Drive من جديد بنفس كلمة التشفير لاسترجاع بياناتك المتزامنة. أي بيانات لم تتزامن ستُفقد.</p><div class="row" style="justify-content:center"><button class="btn" data-k="back">رجوع</button><button class="btn danger" data-k="wipe">مسح بيانات هذا الجهاز</button></div>`}
 function wipeDevice(){try{IDB&&IDB.close()}catch(e){}try{const r=indexedDB.deleteDatabase("idarat-a3mali");r.onsuccess=r.onerror=r.onblocked=()=>location.reload()}catch(e){location.reload()}}
-async function bioEnable(){try{const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:"إدارة أعمالي",id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:"owner",displayName:"إدارة أعمالي"},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required",residentKey:"discouraged"},timeout:60000,attestation:"none"}});
- S.local.lock={...LK(),bio:b64(cred.rawId)};await saveLocal();render();toast("تم تفعيل الفتح بـ Face ID / Touch ID")}catch(e){toast("لم يتم التفعيل. افتح التطبيق من رابط GitHub وتأكد أن Face ID أو Touch ID مفعّل في الجهاز.",4800)}}
-async function bioUnlock(){try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:unb64(LK().bio)}],userVerification:"required",timeout:60000,rpId:location.hostname}});unlock()}catch(e){drawLock("لم يتم التعرف. أدخل الرمز")}}
-function securityPanel(){const l=LK();const bioOK=!!window.PublicKeyCredential&&window.isSecureContext;
- return`<section class="panel"><h2>${I.lock.replace("<svg",'<svg width="18" height="18"')} قفل التطبيق</h2><p class="muted" style="margin:0 0 10px;font-size:13.5px">يطلب رمزًا أو Face ID عند فتح التطبيق على هذا الجهاز. الإعداد خاص بكل جهاز.</p>
- ${l.pin?`<div class="row"><span class="pill ok">مفعّل</span>${l.bio?`<span class="pill ok">Face ID / Touch ID</span>`:""}</div>
+async function bioEnable(){if(!bioOK())return toast("Face ID يعمل من رابط التطبيق على GitHub فقط، وليس من صفحة المعاينة.",4800);
+ try{const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:"إدارة أعمالي",id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:"owner",displayName:"إدارة أعمالي"},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required",residentKey:"discouraged"},timeout:60000,attestation:"none"}});
+  S.local.lock={mins:1,...LK(),bio:b64(cred.rawId)};await saveLocal();render();toast("تم تفعيل الدخول بـ Face ID. سيُطلب عند فتح التطبيق بدل الرمز.",4200)}
+ catch(e){toast(e&&e.name==="NotAllowedError"?"تم إلغاء التفعيل. حاول مرة أخرى ووافق على طلب Face ID.":"لم يتم التفعيل. تأكد أن Face ID مفعّل في إعدادات الآيفون، وأنك فتحت التطبيق من رابط GitHub.",4800)}}
+async function bioUnlock(auto){if(S.bioBusy)return;S.bioBusy=true;if(S.lockMode==="bio")drawLock();
+ try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:unb64(LK().bio)}],userVerification:"required",timeout:60000,rpId:location.hostname}});S.bioBusy=false;unlock()}
+ catch(e){S.bioBusy=false;if(!$("#lock"))return;if(S.lockMode==="bio")drawLock(auto?"افتح بـ Face ID":"لم يتم التعرف، حاول مرة أخرى",!auto);else drawLock("لم يتم التعرف. أدخل الرمز")}}
+function securityPanel(){const l=LK();const on=lockActive();
+ return`<section class="panel"><h2>${I.lock.replace("<svg",'<svg width="18" height="18"')} قفل التطبيق</h2><p class="muted" style="margin:0 0 10px;font-size:13.5px">يُطلب Face ID عند فتح التطبيق على هذا الجهاز، والرمز اختياري كبديل احتياطي. الإعداد خاص بكل جهاز.</p>
+ ${on?`<div class="row">${l.bio?`<span class="pill ok">Face ID مفعّل</span>`:""}${l.pin?`<span class="pill ${l.bio?"":"ok"}">${l.bio?"رمز احتياطي":"الدخول بالرمز"}</span>`:""}</div>
   <div class="fld" style="margin-top:10px"><label for="lk_mins">القفل التلقائي بعد مغادرة التطبيق</label><select id="lk_mins">${[[0,"فورًا"],[1,"بعد دقيقة"],[5,"بعد 5 دقائق"],[15,"بعد 15 دقيقة"],[60,"بعد ساعة"]].map(([v,t])=>`<option value="${v}"${+(l.mins??1)===v?" selected":""}>${t}</option>`).join("")}</select></div>
-  <div class="row-end">${!l.bio&&bioOK?`<button class="btn" data-act="bioOn">تفعيل Face ID / Touch ID</button>`:""}${l.bio?`<button class="btn" data-act="bioOff">إيقاف Face ID</button>`:""}<button class="btn" data-act="lockSet">تغيير الرمز</button><span class="sp"></span><button class="btn danger" data-act="lockOff">إيقاف القفل</button></div>`
- :`<div class="row-end"><span class="sp"></span><button class="btn primary" data-act="lockSet">تعيين رمز الدخول</button></div>`}
+  <div class="row-end">${!l.bio?`<button class="btn primary" data-act="bioOn">${I.face} تفعيل Face ID</button>`:""}${l.bio&&l.pin?`<button class="btn" data-act="bioOff">إيقاف Face ID</button>`:""}<button class="btn" data-act="lockSet">${l.pin?"تغيير الرمز":"إضافة رمز احتياطي"}</button><button class="btn" data-act="lockNow">تجربة القفل الآن</button><span class="sp"></span><button class="btn danger" data-act="lockOff">إيقاف القفل</button></div>`
+ :`<div class="row-end"><button class="btn" data-act="lockSet">استخدام رمز بدلًا من ذلك</button><span class="sp"></span><button class="btn primary" data-act="bioOn">${I.face} تفعيل الدخول بـ Face ID</button></div>`}
  <div class="fld" style="margin-top:12px"><label for="s_dev">اسم هذا الجهاز (يظهر في سجل التعديلات)</label><input id="s_dev" value="${esc(S.local.device||devName())}"></div></section>`}
 function formLock(){openForm({title:lockActive()?"تغيير رمز الدخول":"تعيين رمز الدخول",fields:[{k:"p1",label:"الرمز الجديد (4 إلى 6 أرقام)",type:"password",im:"numeric",req:1},{k:"p2",label:"تأكيد الرمز",type:"password",im:"numeric",req:1}],
- onSave:async v=>{const p=normDigits(v.p1);if(!/^\d{4,6}$/.test(p))return toast("الرمز يجب أن يكون من 4 إلى 6 أرقام");if(p!==normDigits(v.p2))return toast("الرمزان غير متطابقين");const salt=b64(crypto.getRandomValues(new Uint8Array(16)));S.local.lock={...LK(),pin:await sha(salt+p),salt,len:p.length,mins:LK().mins??1};await saveLocal();closeModal();render();toast("تم تفعيل قفل التطبيق. يمكنك أيضًا تفعيل Face ID من نفس القسم.",4200)}})}
+ onSave:async v=>{const p=normDigits(v.p1);if(!/^\d{4,6}$/.test(p))return toast("الرمز يجب أن يكون من 4 إلى 6 أرقام");if(p!==normDigits(v.p2))return toast("الرمزان غير متطابقين");const salt=b64(crypto.getRandomValues(new Uint8Array(16)));S.local.lock={...LK(),pin:await sha(salt+p),salt,len:p.length,mins:LK().mins??1};await saveLocal();closeModal();render();toast(LK().bio?"تم حفظ الرمز الاحتياطي. Face ID يبقى طريقة الدخول الأساسية.":"تم تفعيل القفل بالرمز. يمكنك تفعيل Face ID من نفس القسم.",4200)}})}
 
 /* ---------- employee/company form extras ---------- */
 function moreFeat(){Object.assign(FEAT,{
@@ -1404,7 +1418,7 @@ function moreFeat(){Object.assign(FEAT,{
  pl:{i:"chart",view:"reports",title:"الأرباح والخسائر والضريبة والتدفق النقدي",what:"قائمة الدخل، وملخص إقرار ضريبة القيمة المضافة لكل ربع، وتوقع رصيدك للأشهر القادمة.",steps:["افتح «التقارير» واختر التبويب المطلوب.","«الأرباح والخسائر»: اختر الفترة وشارك القائمة PDF مع المحاسب.","«ضريبة القيمة المضافة»: تنقّل بين الأرباع، وتابع حد التسجيل الإلزامي 38,500 ر.ع.","«التدفق النقدي»: يتوقع رصيدك 3 أشهر وينبهك مسبقًا بأي عجز."]},
  calendar:{i:"cal",view:"prefs",act:"ics",title:"التنبيهات في التقويم",what:"أضف مواعيد انتهاء المستندات والفواتير إلى تقويم الآيفون والماك، فتصلك التنبيهات والتطبيق مغلق.",steps:["افتح «الشركات والإعدادات ← التنبيهات في تقويم الجهاز».","اضغط «إضافة المواعيد الجديدة» ثم «فتح في التقويم».","اختر «إضافة الكل».","بعد إضافة مستندات جديدة كرر الخطوة، فتُضاف المواعيد الجديدة فقط."]},
  ocr:{i:"scan",view:"docs",act:"newDoc",title:"قراءة المستند بالكاميرا",what:"صوّر السجل التجاري أو بطاقة العامل، فيقرأ التطبيق الرقم وتاريخ الانتهاء ويعبّئ الخانات.",steps:["اضغط «مستند جديد».","اضغط «تصوير» وصوّر المستند بوضوح وبإضاءة جيدة.","اضغط «قراءة البيانات من صورة المستند». أول مرة يحتاج إنترنت لتحميل محرك القراءة.","راجع الرقم والتواريخ قبل الحفظ، فالقراءة الآلية قد تخطئ."]},
- lock:{i:"lock",view:"prefs",act:"lockSet",title:"قفل التطبيق",what:"رمز دخول أو Face ID لحماية مستنداتك وأرقامك المالية.",steps:["افتح «الشركات والإعدادات ← قفل التطبيق».","اضغط «تعيين رمز الدخول» واكتب رمزًا من 4 إلى 6 أرقام.","اضغط «تفعيل Face ID / Touch ID» إن أردت.","اختر بعد كم دقيقة يُقفل التطبيق عند الخروج منه.","القفل خاص بكل جهاز، ففعّله على الآيفون والماك كلٍّ على حدة."]},
+ lock:{i:"face",view:"prefs",act:"bioOn",title:"الدخول بـ Face ID",what:"افتح التطبيق بوجهك بدل كتابة رمز، لحماية مستنداتك وأرقامك المالية.",steps:["افتح «الشركات والإعدادات ← قفل التطبيق».","اضغط «تفعيل الدخول بـ Face ID» ووافق على طلب الآيفون.","من الآن يظهر Face ID تلقائيًا عند فتح التطبيق. إن لم يظهر اضغط الأيقونة الكبيرة.","يمكنك إضافة رمز احتياطي (اختياري) لاستخدامه إذا تعذر Face ID.","اختر بعد كم دقيقة يُقفل التطبيق عند الخروج منه.","القفل خاص بكل جهاز، ففعّله على الآيفون والماك كلٍّ على حدة."]},
  log:{i:"history",view:"log",title:"سجل التعديلات",what:"كل إضافة وتعديل وحذف: ماذا، ومتى، ومن أي جهاز.",tip:"سمِّ كل جهاز من الإعدادات لتعرف من أين جاء كل تعديل.",steps:["افتح «المزيد ← سجل التعديلات».","ابحث باسم السجل أو الجهاز.","غيّر اسم الجهاز من «الشركات والإعدادات ← قفل التطبيق»."]}})}
 moreFeat();
 
@@ -1448,7 +1462,7 @@ const ACT2={
  ics:()=>icsOpen(true),icsAll:()=>icsOpen(false),icsDoc:ds=>icsOpen(false,ds.id),icsShare:()=>{if(S.icsFile)share({files:[S.icsFile],title:"مواعيد إدارة أعمالي"})},
  ocr:()=>runOcr(),
  lockSet:()=>formLock(),lockOff:()=>ask("إيقاف قفل التطبيق على هذا الجهاز؟",async()=>{S.local.lock={};await saveLocal();closeModal();render();toast("تم إيقاف القفل")},"إيقاف القفل"),
- bioOn:()=>bioEnable(),bioOff:async()=>{S.local.lock={...LK(),bio:""};await saveLocal();render()},lockNow:()=>showLock(),
+ bioOn:()=>bioEnable(),bioOff:async()=>{S.local.lock={...LK(),bio:""};await saveLocal();render();toast("تم إيقاف Face ID. يُطلب الرمز عند الفتح.")},lockNow:()=>showLock(),
  viewMeta:ds=>{const m=findMeta(ds.id);if(!m)return;const[k,rid]=(ds.ctx||"").split(":");viewMeta(m,()=>k==="tx"?formTx(S.db.tx.find(x=>x.id===rid)):openPay(rid))},
  viewBack:()=>{const f=S.viewBack;closeModal();f&&f()},
  metaShare:ds=>{const b=S.blobs[ds.id];const m=findMeta(ds.id)||{};if(b)shareSheet(m.name||"مرفق","",[new File([b],(m.name||"مرفق").replace(/[\\/:*?"<>|]/g,"-"),{type:b.type})])},
@@ -1459,7 +1473,7 @@ const _act0=act;act=function(a,ds,el){if(ACT2[a])return ACT2[a](ds||{},el);retur
 document.addEventListener("input",e=>{const t=e.target;if(!t.closest)return;if(t.closest("#invForm")&&(t.closest("#i_items")||t.id==="i_disc"))invCalc();if(t.closest("#prLines"))prLive(t);if(t.id==="rc_b"||t.id==="rc_d")recCalc(S.accOpen)});
 document.addEventListener("change",e=>{const t=e.target;if(t.id==="i_vat")invCalc();if(t.id==="i_co"&&S.inv&&!S.inv.id)$("#i_no").value=nextNo(S.inv.kind,t.value);if(t.id==="s_dev"){S.local.device=t.value.trim();saveLocal()}if(t.id==="lk_mins"){S.local.lock={...LK(),mins:+t.value};saveLocal()}});
 document.addEventListener("submit",e=>{if(e.target.id==="invForm"){e.preventDefault();saveInv()}});
-document.addEventListener("keydown",e=>{if(!$("#lock"))return;if(/^\d$/.test(e.key)){e.preventDefault();pinPress(e.key)}else if(e.key==="Backspace"){e.preventDefault();pinPress("del")}});
+document.addEventListener("keydown",e=>{if(!$("#lock"))return;if(S.lockMode==="bio"){if(e.key==="Enter"){e.preventDefault();pinPress("bio")}return}if(/^\d$/.test(e.key)){e.preventDefault();pinPress(e.key)}else if(e.key==="Backspace"){e.preventDefault();pinPress("del")}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)S.hiddenAt=Date.now();else if(lockActive()&&S.hiddenAt&&Date.now()-S.hiddenAt>=(+(LK().mins??1))*60000)showLock()});
 
 /* ========== events ========== */
