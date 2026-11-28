@@ -673,7 +673,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="3.3";
+const APP_VER="3.4";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -687,7 +687,7 @@ VIEWS.prefs=()=>{const sy=S.sync;
   <section class="panel"><h2>${I.cloud.replace("<svg",'<svg width="18" height="18"')} المزامنة مع Google Drive</h2>
    <p class="muted" style="margin:0 0 10px;font-size:13.5px">تُحفظ نسخة مشفّرة من بياناتك ومرفقاتك في مجلد خاص بالتطبيق داخل Google Drive، فتعمل على الآيفون والماك وأي جهاز آخر. لا أحد يستطيع قراءتها بدون كلمة التشفير.</p>
    <form id="syncForm" class="form"><div class="fld"><label for="s_cid">معرّف العميل (OAuth Client ID)</label><input id="s_cid" value="${esc(sy.clientId)}" placeholder="xxxx.apps.googleusercontent.com" dir="ltr"></div>
-   <div class="fld"><label for="s_pass">كلمة التشفير (نفسها على كل الأجهزة)</label><input id="s_pass" type="password" value="${esc(sy.pass)}" autocomplete="new-password"></div>
+   <div class="fld"><label for="s_pass">كلمة التشفير (نفسها على كل الأجهزة)</label><input id="s_pass" type="text" class="pwmask" value="${esc(sy.pass)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
    <div class="row-end"><button class="btn primary" type="submit">${sy.connected?"حفظ ومزامنة الآن":"ربط Google Drive"}</button>${sy.connected?'<button type="button" class="btn ghost" data-act="disconnect">فصل</button>':""}<span class="sp"></span><span class="muted" style="font-size:12.5px">${sy.lastSync?"آخر مزامنة: "+new Date(sy.lastSync).toLocaleString("ar-OM"):"لم تتم مزامنة بعد"}</span></div></form>
    <details style="margin-top:10px;font-size:13.5px"><summary style="cursor:pointer;font-weight:600">طريقة الحصول على معرّف العميل (مرة واحدة)</summary><ol style="padding-inline-start:20px;margin:8px 0">
     <li>افتح console.cloud.google.com وأنشئ مشروعًا جديدًا.</li><li>من «APIs & Services ← Library» فعّل <b>Google Drive API</b>.</li><li>من «OAuth consent screen» اختر External وأضف بريدك كمستخدم اختبار.</li><li>من «Credentials ← Create credentials ← OAuth client ID» اختر Web application، وأضف رابط موقعك على GitHub Pages في «Authorized JavaScript origins».</li><li>انسخ الـ Client ID والصقه هنا على كل جهاز، مع نفس كلمة التشفير.</li></ol></details>
@@ -1828,6 +1828,7 @@ function greet(d){d=d||new Date();const h=d.getHours();return h>=4&&h<12?"صبا
 setInterval(()=>{const h=document.querySelector("main h1");if(S.view==="home"&&h&&h.textContent!==greet()&&!document.hidden)h.textContent=greet()},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.view==="home"){const h=document.querySelector("main h1");if(h)h.textContent=greet()}});
 const CHANGES=[
+ ["3.4","كلمة تشفير المزامنة: لم يعد الآيفون يملأ الخانة بكلمة سر مقترحة تلقائيًا، وزر «إظهار» لمقارنتها مع الجهاز الآخر، وشرح واضح عند عدم التطابق مع خيار آمن لبدء نسخة جديدة إذا نُسيت."],
  ["3.3","التحديث من داخل التطبيق: عند رفع إصدار جديد يظهر شريط «تحديث جديد متاح» بزر «تحديث الآن» الذي يحفظ بياناتك ويزامنها ثم يحمّل الإصدار الجديد دون إغلاق التطبيق، وزر «البحث عن تحديث» في الإعدادات."],
  ["3.2","مزامنة Google Drive تعمل الآن في التطبيق المثبت على شاشة الآيفون وفي Dock الماك: الدخول إلى Google داخل التطبيق ثم العودة تلقائيًا بدل النافذة المنبثقة، مع حفظ الإذن وتجديده تلقائيًا عند فتح التطبيق. عنوان إعادة التوجيه وخطوات Google Cloud المحدّثة في الإعدادات."],
  ["3.1","زر «رجوع» واضح أعلى كل صفحة يعود للصفحة التي جئت منها، والسحب من الحافة اليمنى للرجوع في الآيفون، واختصار ⌥→ أو ⌘[ في الماك. معاينة الكتالوج داخل التطبيق بزر رجوع، وشريط «رجوع للتطبيق» في صفحة الكتالوج على أجهزتك. في إعدادات الكتالوج: «إعادة الربط»، و«تغيير المفتاح»، و«فحص الاتصال». وفي الكتالوج: يحفظ الزبون «الفاتورة المؤقتة» PDF لطلبه على جهازه، و«طلباتي السابقة»."],
@@ -3100,6 +3101,25 @@ document.head.insertAdjacentHTML("beforeend",`<style>#updbar{position:fixed;z-in
 /* settings: manual check */
 {const _r=render;render=function(){const r=_r.apply(this,arguments);const v=document.querySelector("main .verline");if(v&&!v.dataset.u){v.dataset.u=1;v.insertAdjacentHTML("beforeend",`<div style="margin-top:8px"><button class="btn sm" data-act="updCheck">البحث عن تحديث</button>${S.local.updChecked?`<span class="muted" style="font-size:12px;margin-inline-start:8px">آخر فحص ${new Date(S.local.updChecked).toLocaleTimeString("ar-OM",{hour:"numeric",minute:"2-digit"})}</span>`:""}</div>`)}return r}}
 Object.assign(ACT2,{updNow:()=>doUpdate(),updLater:()=>{const b=document.getElementById("updbar");if(b)b.remove();try{sessionStorage.setItem("idarat_updlater",(S.updInfo||{}).v||"")}catch(e){}toast("سنذكّرك عند فتح التطبيق مرة أخرى")},updCheck:()=>{toast("جارٍ البحث عن تحديث…");checkUpdate(true)}});
+
+/* ---------- P. encryption password: no iOS auto-generated passwords, show/hide, clear mismatch help, safe reset ---------- */
+const PASS_ERR="كلمة التشفير لا تطابق البيانات المحفوظة في Drive";
+{const _r=render;render=function(){const r=_r.apply(this,arguments);const i=document.getElementById("s_pass");if(i&&!i.dataset.pw){i.dataset.pw=1;i.type="text";i.setAttribute("autocomplete","off");i.setAttribute("autocapitalize","off");i.setAttribute("autocorrect","off");i.setAttribute("spellcheck","false");i.setAttribute("data-lpignore","true");i.classList.add("pwmask");
+ i.insertAdjacentHTML("afterend",`<div class="row" style="gap:6px;margin-top:6px"><button type="button" class="btn sm" data-act="pwShow">إظهار</button><span class="muted num" id="pwLen" style="font-size:12px"></span></div>`);const upd=()=>{const e=$("#pwLen");if(e)e.textContent=i.value?`${i.value.length} حرفًا`:""};i.addEventListener("input",upd);upd()}return r}}
+document.head.insertAdjacentHTML("beforeend",`<style>.pwmask{-webkit-text-security:disc;text-security:disc;font-family:inherit}.pwmask.show{-webkit-text-security:none;text-security:none}</style>`);
+{const _t=toast;toast=function(m,ms){if(m===PASS_ERR)return passHelp();return _t(m,ms)}}
+function passHelp(){const p=($("#s_pass")||{}).value||S.sync.pass||"";
+ modal(`<h2>${I.lock} كلمة التشفير غير مطابقة</h2><p style="margin:0">تم الدخول إلى Google بنجاح ✓، لكن بياناتك في Drive مشفّرة بكلمة تشفير مختلفة عن المكتوبة في هذا الجهاز (${p.length} حرفًا).</p>
+ <ol class="steps"><li>افتح التطبيق في الجهاز الذي تعمل فيه المزامنة (مثل الماك): الإعدادات ← المزامنة مع Google Drive ← «إظهار» لترى كلمة التشفير.</li><li>هنا: امسح الخانة واكتبها بنفس الحروف تمامًا (انتبه للأحرف الكبيرة والمسافات)، ثم «ربط Google Drive». لن يُطلب منك الدخول إلى Google مرة أخرى.</li></ol>
+ <div class="muted" style="font-size:12.5px">إذا اقترح الآيفون «كلمة سر قوية» فلا تقبلها — اكتب كلمتك أنت.</div>
+ <details><summary style="cursor:pointer;font-weight:600;font-size:13.5px">نسيت كلمة التشفير في كل الأجهزة؟</summary><p class="muted" style="font-size:13px">يمكن بدء نسخة Drive جديدة بكلمة هذا الجهاز. تُحفظ النسخة القديمة في Drive باسم احتياطي (لا تُحذف)، لكن لا يمكن قراءتها بدون كلمتها القديمة. استخدم هذا فقط من الجهاز الذي فيه أحدث وأكمل بياناتك، ثم اكتب الكلمة الجديدة في الأجهزة الأخرى.</p><button class="btn sm danger" data-act="passReset">بدء نسخة Drive جديدة بكلمة هذا الجهاز</button></details>
+ <div class="row-end"><span class="sp"></span><button class="btn primary" data-act="passFix">تعديل كلمة التشفير</button></div>`)}
+async function passReset(){const p=S.sync.pass;if(!p||p.length<6)return toast("اكتب كلمة تشفير من 6 أحرف على الأقل أولًا");
+ ask(`بدء نسخة جديدة في Drive بكلمة التشفير الحالية (${p.length} حرفًا) وبيانات هذا الجهاز فقط (${S.db.companies.length} شركة، ${S.db.sales.length} عملية بيع)؟ النسخة القديمة تبقى في Drive كنسخة احتياطية.`,async()=>{try{toast("جارٍ التجهيز…",6000);await getToken(true);const f=await findFile(MAIN);
+  if(f)await gfetch(`https://www.googleapis.com/drive/v3/files/${f.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"idarat-a3mali-db.old-"+today()+"-"+Date.now()+".enc"})});
+  S.sync.synced=[];await saveLocal();closeModal();await syncNow(false)}catch(e){toast("تعذر: "+(e.message||e))}},"بدء نسخة جديدة")}
+Object.assign(ACT2,{pwShow:ds=>{const i=$("#s_pass");if(!i)return;const on=i.classList.toggle("show");const b=document.querySelector('[data-act="pwShow"]');if(b)b.textContent=on?"إخفاء":"إظهار"},
+ passFix:()=>{closeModal();if(S.view!=="prefs")go("prefs");setTimeout(()=>{const i=$("#s_pass");if(i){i.classList.add("show");i.scrollIntoView({block:"center"});i.select();const b=document.querySelector('[data-act="pwShow"]');if(b)b.textContent="إخفاء"}},300)},passReset:()=>passReset()});
 
 /* ========== events ========== */
 function act(a,ds,el){switch(a){
