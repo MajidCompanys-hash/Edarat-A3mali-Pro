@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#1e4b41">
 <title>الكتالوج</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@ main{padding-block:14px 120px}
 .bar button{width:100%;max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;border:0;border-radius:16px;background:var(--brand);color:var(--on);padding:14px 18px;font-size:15px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .badge{background:var(--on);color:var(--brand);border-radius:999px;padding:1px 9px;font-weight:700}
 .scrim{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px max(18px,env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px;animation:up .22s ease-out}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;max-height:92dvh;overscroll-behavior:contain;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px max(18px,env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px;animation:up .22s ease-out}
 @keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
 @media(min-width:700px){.scrim{align-items:center}.sheet{border-radius:20px}}
 h2{font-family:var(--fd);font-size:20px;margin:0}h3{font-size:14px;margin:0;color:var(--muted);font-weight:600}
@@ -73,6 +73,7 @@ h2{font-family:var(--fd);font-size:20px;margin:0}h3{font-size:14px;margin:0;colo
 footer{color:var(--muted);font-size:12px;text-align:center;padding:10px 0 20px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 @supports (aspect-ratio:1/1){.ph{height:auto}}
+button,a,label,.card,.chip{touch-action:manipulation;-webkit-user-select:none;user-select:none}input,textarea,select{-webkit-user-select:text;user-select:text;font-size:16px}
 </style>
 </head>
 <body>
@@ -167,6 +168,11 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b
 document.addEventListener("input",e=>{const x=e.target;if(x.id==="q"){S.q=x.value;const pos=x.selectionStart;draw();const n=$("#q");n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("change",e=>{const x=e.target;if(x.classList.contains("qin")){S.cart[x.dataset.k]=Math.max(0,Math.floor(+x.value||0));saveCart();refresh()}else if(x.id==="f_area"){S.me.area=x.value;$("#tot").innerHTML=totHTML();const b=$("[data-a=send]");if(b)b.innerHTML=`${t("send")} · ${money(totals().total)}`}});
 document.addEventListener("gesturestart",e=>e.preventDefault());
+(()=>{let last=0;document.addEventListener("touchend",e=>{const n=Date.now();if(n-last<320&&!e.target.closest("input,textarea,select,button,a,label,[data-a]"))e.preventDefault();last=n},{passive:false});document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});document.addEventListener("wheel",e=>{if(e.ctrlKey)e.preventDefault()},{passive:false})})();
+/* phone back closes the open sheet instead of leaving the catalog */
+(()=>{let mh=false;const _s=sheet,_c=closeS;let inS=0,skip=0;sheet=function(h){inS=1;let r;try{r=_s(h)}finally{inS=0}if(!mh&&!skip){try{history.pushState({sh:1},"");mh=true}catch(e){}}return r};closeS=function(){const had=!!document.getElementById("scrim");_c();if(inS)return;if(had&&mh&&!closeS.pop){mh=false;skip=1;try{history.back()}catch(e){skip=0}}};
+ window.addEventListener("popstate",()=>{if(skip){skip=0;if(document.getElementById("scrim")&&!mh){try{history.pushState({sh:1},"");mh=true}catch(e){}}return}if(document.getElementById("scrim")){mh=false;closeS.pop=true;try{if($("#tot"))readMe();closeS();draw()}finally{closeS.pop=false}}else mh=false});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("scrim")){if($("#tot"))readMe();closeS();draw()}})})();
 load();
 }
 </script>

@@ -501,7 +501,7 @@ function render(){const v=S.view;document.documentElement.classList.toggle("sale
 function go(v,push=true){if(!VIEWS[v])v="home";if(v===S.view){window.scrollTo({top:0,behavior:"smooth"});return}
   const a=ordFor(S.view).indexOf(baseTab(S.view)),b=ordFor(v).indexOf(baseTab(v));S.anim=isS(S.view)!==isS(v)||a===b?"fade":(b>a?"next":"prev");if(!isS(S.view)&&isS(v))S.f.prevAdmin=S.view;
   S.view=v;closeModal();if(push)try{history.pushState({v},"","#"+v)}catch(e){}render();window.scrollTo(0,0)}
-window.addEventListener("popstate",e=>{const v=(e.state&&e.state.v)||location.hash.slice(1)||"home";if(VIEWS[v]&&v!==S.view){S.anim="prev";S.view=v;closeModal();render();window.scrollTo(0,0)}});
+window.__origPop=(e=>{const v=(e.state&&e.state.v)||location.hash.slice(1)||"home";if(VIEWS[v]&&v!==S.view){S.anim="prev";S.view=v;closeModal();render();window.scrollTo(0,0)}});
 function focusBar(){if(S.view==="home"||S.view==="proj")return"";const c=S.local.co||"all";if(c==="all")return"";const pid=focusP();
   return`<div class="focus">${pid?I.brief:I.building}<span class="sp">تعرض الآن: <b>${esc(scopeName())}</b> فقط</span>${pid?`<button class="btn sm" data-act="openProj" data-id="${pid}">صفحة المشروع</button>`:""}<button class="btn sm ghost" data-act="scopeAll">عرض الكل</button></div>`}
 function tipBar(v){const f=FEAT[v];if(!f||!f.tip||(S.local.tips||{})[v])return"";return`<div class="tip">${I.help}<div class="sp"><b>${esc(f.title)}</b>${esc(f.tip)} <button class="btn sm ghost" style="padding:2px 8px;margin-top:4px" data-act="help">اشرح لي خطوة بخطوة</button></div><button class="x" data-act="hideTip" data-v="${v}" aria-label="إخفاء">×</button></div>`}
@@ -673,7 +673,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="2.8";
+const APP_VER="2.9";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -1828,6 +1828,7 @@ function greet(d){d=d||new Date();const h=d.getHours();return h>=4&&h<12?"صبا
 setInterval(()=>{const h=document.querySelector("main h1");if(S.view==="home"&&h&&h.textContent!==greet()&&!document.hidden)h.textContent=greet()},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.view==="home"){const h=document.querySelector("main h1");if(h)h.textContent=greet()}});
 const CHANGES=[
+ ["2.9","سلاسة التنقل: زر الرجوع في الهاتف يغلق النافذة المفتوحة أولًا ثم يعود للصفحة السابقة بنفس موضع التمرير، وEsc يغلق النوافذ في الماك. منع التكبير بالقرص والنقر المزدوج في التطبيق والكتالوج، ونوافذ تتسع للشاشة على الآيفون وفي الوضع الأفقي، وعدم التنقل بالسحب داخل الجداول والتوقيع."],
  ["2.8","إدارة المحلات الصغيرة: خط السير اليومي بأيام الزيارة ومن حان موعد طلبه ومن عليه متأخرات، موقع المحل، أسعار خاصة لكل محل، حد ائتمان وتنبيه المتأخرات، تحصيل يُوزَّع على الأقدم مع سند قبض، وتسجيل الزيارات. المرتجعات الكاملة: مرتجع جزئي أو كامل من أي طلب أو فاتورة بإشعار دائن ضريبي مرتبط بالفاتورة الأصلية، وإعادة الصنف السليم للمخزون وتسجيل التالف خسارة، والخصم من المستحق أو الاسترداد نقدًا أو بطاقة أو تحويلًا مع تعديل المبيعات وضريبة المخرجات تلقائيًا. مرتجع للمورد بإشعار مدين يُنقص المخزون والمستحق. شاشة المرتجعات بالنسب والأسباب، وتنبيهات المستشار."],
  ["2.7","دورة الطلب والفاتورة: اعتماد الأصناف المتوفرة وفاتورة مبدئية، والتحقق من استلام كل صنف وتوقيع الزبون وحفظ الفاتورة الموقعة. فواتير الشركات الكبرى: أوامر الشراء، إشعارات التسليم، الفاتورة المجمّعة، متابعة الإرسال والاعتماد وأعمار الديون. المشتريات والموردين بالتكلفة المتوسطة، والجرد، وتواريخ الانتهاء. استيراد المنتجات والزبائن من Excel وPDF، ونموذج طلب PDF مع الصور، وكل المستندات والرسائل بالعربية والإنجليزية. المستشار الذكي للمبيعات، وحماية بيانات المنتجات من التكرار والحذف مع نسخ تلقائية يومية."],
  ["2.6","الكتالوج الإلكتروني بالعربية والإنجليزية: رابط للزبائن يطلبون منه بالكرتون أو بالحبة، وطلبات محفوظة فورًا في خادمك على Google، وإدارة الطلبات من التأكيد حتى التسليم مع تحويلها إلى بيع."],
@@ -2925,6 +2926,37 @@ Object.assign(ACT2,{shopEdit:ds=>formShop(custById(ds.id)),prEdit:ds=>formPrices
  rvList:ds=>{const l=(S.db.receipts||[]).filter(r=>r.custId===ds.id).sort((a,b)=>b.date.localeCompare(a.date));modal(`<h2>سندات القبض</h2><div class="list">${l.map(r=>`<button class="item" data-act="rvOpen" data-id="${r.id}"><span class="main"><span class="t num">${esc(r.number)}</span><div class="s">${fdate(r.date)}${r.by?" · "+esc(r.by):""}</div></span><b>${M(r.amount)}</b></button>`).join("")}</div><div class="row-end"><span class="sp"></span><button class="btn ghost" data-act="close">إغلاق</button></div>`)}});
 
 document.head.insertAdjacentHTML("beforeend",`<style>a.btn{text-decoration:none;color:inherit}a.btn.primary{color:var(--brand-ink)}</style>`);
+
+/* ---------- K. navigation & smoothness: back closes windows first, scroll restore, sheet/scroll fixes ---------- */
+/* Phone back (Android button / iOS swipe / browser back): an open window closes first; otherwise previous page with its scroll position. */
+S.mh=false;S.backPending=false;S.sp={};
+{const _m=modal,_c=closeModal,_go=go;
+ const pushM=()=>{try{history.pushState({v:S.view,m:1},"",location.hash||"#"+S.view);S.mh=true}catch(e){}};
+ modal=function(){S.mOpen=1;let r;try{r=_m.apply(this,arguments)}finally{S.mOpen=0}document.documentElement.classList.add("modal-open");if(!S.mh&&!S.backPending)pushM();return r};
+ closeModal=function(){const had=!!document.getElementById("scrim");const r=_c.apply(this,arguments);if(S.mOpen)return r;document.documentElement.classList.remove("modal-open");
+  if(had&&S.mh&&!S.popping&&!S.navGo){S.mh=false;S.backPending=true;try{history.back()}catch(e){S.backPending=false}}return r};
+ go=function(v,push=true){S.sp[S.view]=window.scrollY;if(S.backPending&&push){S.pendingPush=v;return _go.call(this,v,false)}if(S.mh&&push&&v!==S.view&&VIEWS[v]){closeModal();if(S.backPending){S.pendingPush=v;return _go.call(this,v,false)}}S.navGo=true;try{return _go.call(this,v,push)}finally{S.navGo=false}};
+ window.addEventListener("popstate",e=>{
+  if(S.backPending){S.backPending=false;if(S.pendingPush){const v=S.pendingPush;S.pendingPush=null;try{history.pushState({v},"","#"+v)}catch(_){}}if(document.getElementById("scrim")&&!S.mh)pushM();return}
+  if(document.getElementById("scrim")){S.popping=true;S.mh=false;try{closeModal()}finally{S.popping=false}const v=(e.state&&e.state.v)||S.view;if(v!==S.view){S.view=v;render()}return}
+  S.mh=false;const v=(e.state&&e.state.v)||location.hash.slice(1)||"home";const y=S.sp[v]||0;if(window.__origPop)window.__origPop(e);setTimeout(()=>window.scrollTo(0,y),40)});
+ try{if(!history.state)history.replaceState({v:S.view},"","#"+S.view)}catch(e){}}
+/* swipe between tabs must not fire on horizontally scrollable tables, signature pad, previews, chips */
+{const sx=e=>{const t=e.target;return t&&t.closest&&t.closest(".tblw,canvas,.docprev,.phgrid,.chips,[data-noswipe],#scrim")};document.addEventListener("touchstart",e=>{if(sx(e))G=null},{passive:true,capture:false});document.addEventListener("touchend",e=>{if(sx(e))G=null},{capture:true,passive:true})}
+/* Esc closes the top window on Mac/PC */
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("scrim")&&!e.defaultPrevented){e.preventDefault();closeModal()}});
+document.head.insertAdjacentHTML("beforeend",`<style>
+.sheet{max-height:92vh;max-height:92dvh;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+html.modal-open,html.modal-open body{overflow:hidden}
+.scrim{overscroll-behavior:contain}
+.tblw{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+img,canvas,svg{max-width:100%}
+.sheet img.pbig{max-height:34vh}
+@media (orientation:landscape) and (max-height:500px){.sheet{max-height:96dvh}.sheet .docprev{max-height:40vh}.nav button{padding:4px 2px 3px}.nav svg{width:19px;height:19px}}
+@media (min-width:900px){.sheet.wide{max-width:min(900px,92vw)}}
+button,.btn,.chip,.item,a{-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
+</style>`);
 
 /* ========== events ========== */
 function act(a,ds,el){switch(a){
