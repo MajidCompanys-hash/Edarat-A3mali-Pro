@@ -673,7 +673,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="3.4";
+const APP_VER="3.5";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -1828,6 +1828,7 @@ function greet(d){d=d||new Date();const h=d.getHours();return h>=4&&h<12?"صبا
 setInterval(()=>{const h=document.querySelector("main h1");if(S.view==="home"&&h&&h.textContent!==greet()&&!document.hidden)h.textContent=greet()},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.view==="home"){const h=document.querySelector("main h1");if(h)h.textContent=greet()}});
 const CHANGES=[
+ ["3.5","المنتجات في Excel وNumbers: ملف واحد بالصور والباركود والأسعار والتكلفة، يُعدَّل خارج التطبيق ويُعاد استيراده مع مراجعة كل تغيير، وحماية تعديلات التطبيق الأحدث، وجرد رسمي، والتراجع عن آخر استيراد. واستيراد صور الأصناف من ملفات الموردين."],
  ["3.4","كلمة تشفير المزامنة: لم يعد الآيفون يملأ الخانة بكلمة سر مقترحة تلقائيًا، وزر «إظهار» لمقارنتها مع الجهاز الآخر، وشرح واضح عند عدم التطابق مع خيار آمن لبدء نسخة جديدة إذا نُسيت."],
  ["3.3","التحديث من داخل التطبيق: عند رفع إصدار جديد يظهر شريط «تحديث جديد متاح» بزر «تحديث الآن» الذي يحفظ بياناتك ويزامنها ثم يحمّل الإصدار الجديد دون إغلاق التطبيق، وزر «البحث عن تحديث» في الإعدادات."],
  ["3.2","مزامنة Google Drive تعمل الآن في التطبيق المثبت على شاشة الآيفون وفي Dock الماك: الدخول إلى Google داخل التطبيق ثم العودة تلقائيًا بدل النافذة المنبثقة، مع حفظ الإذن وتجديده تلقائيًا عند فتح التطبيق. عنوان إعادة التوجيه وخطوات Google Cloud المحدّثة في الإعدادات."],
@@ -2229,13 +2230,13 @@ function guessMap(rows,hi){const nc=Math.max(...rows.slice(0,200).map(r=>r.lengt
  if(!used.has("price")&&dec[0]){map[dec[0].i]="price";used.add("price");if(!used.has("piecePrice")&&dec[1]&&dec[1].avg<dec[0].avg*.5){map[dec[1].i]="piecePrice";used.add("piecePrice")}}
  return map}
 function impItems(I_){const{rows,hi,map}=I_;const g=k=>map.indexOf(k);const items=[];let cat="";const ix={};IMPF.forEach(([k])=>{if(k)ix[k]=g(k)});
- for(const r of rows.slice(hi+1)){const cells=r.map(c=>c==null?"":c);const ne=cells.filter(c=>String(c).trim()!=="");if(!ne.length)continue;
+ for(const[ri,r]of rows.slice(hi+1).entries()){const cells=r.map(c=>c==null?"":c);const ne=cells.filter(c=>String(c).trim()!=="");if(!ne.length)continue;
   const get=k=>ix[k]>=0?cells[ix[k]]:"";const name=String(get("name")||"").trim();
   if(/^(الإجمالي|المجموع|الاجمالي|total|subtotal|المجموع الكلي)/i.test(name)||ne.some(c=>/^(الإجمالي|المجموع|total)\b/i.test(String(c).trim())&&ne.length<=3))continue;
   const nums=["price","piecePrice","cost","packQty","stock","minStock"].map(k=>pNum(get(k)));
   if(ne.length===1&&!isNumCell(ne[0])&&String(ne[0]).length<40&&nums.every(isNaN)){cat=String(ne[0]).trim();continue}
   if(!name||isNumCell(name)||headScore(cells)>=2)continue;
-  const it={name,nameEn:String(get("nameEn")||"").trim(),sku:nDig(get("sku")).replace(/\s/g,"").replace(/\.0+$/,""),category:String(get("category")||"").trim()||cat,unit:String(get("unit")||"").trim()};
+  const it={_r:hi+1+ri,name,nameEn:String(get("nameEn")||"").trim(),sku:nDig(get("sku")).replace(/\s/g,"").replace(/\.0+$/,""),category:String(get("category")||"").trim()||cat,unit:String(get("unit")||"").trim()};
   ["price","piecePrice","cost","packQty","stock","minStock"].forEach((k,n)=>{const v=nums[n];if(!isNaN(v)&&v>=0)it[k]=k==="packQty"||k==="minStock"?Math.round(v):r3(v)});{const ex=pDate(get("expiry"));if(ex)it.expiry=ex}items.push(it)}
  return items}
 function pDate(v){if(v===""||v==null)return"";if(typeof v==="number"&&v>20000&&v<80000){const d=new Date(Date.UTC(1899,11,30)+v*864e5);return d.toISOString().slice(0,10)}const t=nDig(v).trim();let m=t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);if(m){const y=m[3].length===2?"20"+m[3]:m[3];return`${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`}m=t.match(/^(\d{1,2})[-\/.](\d{4})$/);if(m)return`${m[2]}-${m[1].padStart(2,"0")}-28`;return""}
@@ -2258,7 +2259,7 @@ function impUI(){const I_=S.imp;if(!I_)return;const sh=I_.sheets[I_.si];I_.rows=
  <div class="fld"><label>هامش ربح الجملة % (للأصناف بلا سعر، من التكلفة)</label><input id="imp_mk" type="text" inputmode="decimal" value="${esc(o.mk||"")}" placeholder="مثال: 15"></div>
  <div class="fld"><label>هامش المفرد % (سعر الحبة من سعر الجملة)</label><input id="imp_pmk" type="text" inputmode="decimal" value="${esc(o.pmk||"")}" placeholder="مثال: 20"></div>
  <div class="fld"><label>الأصناف الموجودة مسبقًا</label><select id="imp_up"><option value="1"${o.up!=="0"?" selected":""}>تحديث أسعارها وبياناتها</option><option value="0"${o.up==="0"?" selected":""}>تركها كما هي</option></select></div></div>
- <div class="panel" style="padding:12px;margin:0"><div class="row" style="flex-wrap:wrap;gap:8px"><span class="pill ok">جديد: <b class="num">${P.add}</b></span><span class="pill info">تحديث: <b class="num">${P.upd}</b></span>${P.dup?`<span class="pill">مكرر في الملف: <b class="num">${P.dup}</b></span>`:""}${P.noPrice?`<span class="pill warn">بدون سعر: <b class="num">${P.noPrice}</b></span>`:""}${P.noPack?`<span class="pill warn">سعر مفرد بلا عدد حبات: <b class="num">${P.noPack}</b></span>`:""}</div>
+ <div class="panel" style="padding:12px;margin:0"><div class="row" style="flex-wrap:wrap;gap:8px"><span class="pill ok">جديد: <b class="num">${P.add}</b></span><span class="pill info">تحديث: <b class="num">${P.upd}</b></span>${P.dup?`<span class="pill">مكرر في الملف: <b class="num">${P.dup}</b></span>`:""}${P.noPrice?`<span class="pill warn">بدون سعر: <b class="num">${P.noPrice}</b></span>`:""}${Object.keys(sh.pics||{}).length?`<span class="pill info">صور: <b class="num">${Object.keys(sh.pics).length}</b></span>`:""}${P.noPack?`<span class="pill warn">سعر مفرد بلا عدد حبات: <b class="num">${P.noPack}</b></span>`:""}</div>
  ${samp?`<div style="margin-top:8px"><div class="muted" style="font-size:12px">${I.lock} الربح يظهر لك فقط في التطبيق، ولا يظهر في الكتالوج ولا في نموذج الطلب:</div>${samp}</div>`:""}
  ${!I_.map.includes("name")?`<div style="color:var(--bad);font-weight:600;margin-top:6px">حدد عمود «اسم الصنف».</div>`:""}</div>
  <div class="row-end"><button class="btn ghost" data-act="close">إلغاء</button><span class="sp"></span><button class="btn primary" data-act="impGo"${!I_.map.includes("name")||!(P.add+P.upd)?" disabled":""}>استيراد ${P.add+(o.up!=="0"?P.upd:0)} صنف</button></div>`);const sx=$("#scrim .sheet");if(sx&&sx.dataset.imp){const y=sx.scrollTop;sx.innerHTML=html;sx.scrollTop=y}else{modal(html,true);const n=$("#scrim .sheet");if(n)n.dataset.imp=1}}
@@ -2274,10 +2275,12 @@ async function impFile(f){if(!f)return;const ext=(f.name.split(".").pop()||"").t
  S.imp={file:f.name,sheets,si,hi,map:guessMap(rows,hi),ocr:sheets[si].ocr,opt:{biz:defBiz(),sm:"set",mk:S.local.impMk||"",pmk:S.local.impPmk||"",up:"1"}};impUI()}
 function pickImport(){const i=document.createElement("input");i.type="file";i.accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt,.pdf,application/pdf,image/*,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv";i.onchange=()=>impFile(i.files[0]);i.click()}
 async function impGo(){impOpts();const I_=S.imp;const o=I_.opt;const P=impPlan(I_);let a=0,u=0;S.local.impMk=o.mk;S.local.impPmk=o.pmk;saveLocal();
+ const shp=(I_.sheets[I_.si]||{}).pics||{},xim=S.xlExtImgs||{};const pimg=it=>(shp[it._r]&&shp[it._r].blob)||(it.sku&&xim[String(it.sku).toLowerCase()])||xim[String(it.name||"").trim().toLowerCase()]||null;const pend=[];
  for(const{it,ex,dup}of P.plan){if(dup)continue;const set={};["nameEn","sku","category","unit","expiry"].forEach(k=>{if(it[k])set[k]=it[k]});["price","piecePrice","cost","packQty","minStock"].forEach(k=>{if(it[k]!==undefined)set[k]=it[k]});
-  if(ex){if(o.up==="0")continue;if(it.stock!==undefined)set.stock=o.sm==="add"?r3((+ex.stock||0)+it.stock):it.stock;upsert("products",{...ex,...set});u++}
-  else{upsert("products",{id:uid(),name:it.name,track:"yes",active:true,web:true,companyId:o.biz,unit:"حبة",minStock:5,stock:0,price:0,cost:0,...set,stock:it.stock!==undefined?it.stock:0,imported:today()});a++}}
- await save();S.imp=null;closeModal();S.local.co=o.biz;saveLocal();if(S.view!=="s-prod")go("s-prod");else render();toast(`تم الاستيراد: ${a} صنف جديد${u?` · ${u} تحديث`:""}${webOn()&&wcfg().biz===o.biz?" · سيُحدَّث الكتالوج تلقائيًا":""}`,5000)}
+  if(ex){if(o.up==="0")continue;if(it.stock!==undefined)set.stock=o.sm==="add"?r3((+ex.stock||0)+it.stock):it.stock;upsert("products",{...ex,...set});u++;if(pimg(it)&&!ex.img)pend.push([ex.id,pimg(it)])}
+  else{upsert("products",{id:uid(),name:it.name,track:"yes",active:true,web:true,companyId:o.biz,unit:"حبة",minStock:5,stock:0,price:0,cost:0,...set,stock:it.stock!==undefined?it.stock:0,imported:today()});a++;if(pimg(it))pend.push([S.db.products[S.db.products.length-1].id,pimg(it)])}}
+ let ni=0;for(const[id,b]of pend){try{const[m]=await storeFiles([b instanceof File?b:new File([b],"p.jpg",{type:b.type||"image/jpeg"})]);const p=prodById(id);if(p){upsert("products",{...p,img:m.id});ni++}}catch(e){}}S.xlExtImgs=null;
+ await save();S.imp=null;closeModal();S.local.co=o.biz;saveLocal();if(S.view!=="s-prod")go("s-prod");else render();toast(`تم الاستيراد: ${a} صنف جديد${u?` · ${u} تحديث`:""}${ni?` · ${ni} صورة`:""}${webOn()&&wcfg().biz===o.biz?" · سيُحدَّث الكتالوج تلقائيًا":""}`,5000)}
 async function exportProds(tpl){try{await loadScript(LIB.xlsx)}catch(e){return toast("تعذر تحميل أداة Excel. تحقق من الاتصال.")}const biz=defBiz();
  const H=["اسم الصنف","الاسم بالإنجليزية","الباركود","القسم","الوحدة","عدد الحبات في الوحدة","سعر الجملة","سعر المفرد (الحبة)","التكلفة (سعر الشراء)","الربح للوحدة","هامش الربح %","الكمية / المخزون","حد التنبيه"];
  const rows=tpl?[["أرز بسمتي — كيس 10 كجم","Basmati rice 10 kg","6281000000017","مواد أساسية","كيس","",4.5,"",3.6,"","",20,5],["مياه معبأة 330 مل","Water 330 ml","6281000000024","مشروبات","كرتون",24,1.2,0.07,0.8,"","",50,10]]
@@ -3120,6 +3123,269 @@ async function passReset(){const p=S.sync.pass;if(!p||p.length<6)return toast("�
   S.sync.synced=[];await saveLocal();closeModal();await syncNow(false)}catch(e){toast("تعذر: "+(e.message||e))}},"بدء نسخة جديدة")}
 Object.assign(ACT2,{pwShow:ds=>{const i=$("#s_pass");if(!i)return;const on=i.classList.toggle("show");const b=document.querySelector('[data-act="pwShow"]');if(b)b.textContent=on?"إخفاء":"إظهار"},
  passFix:()=>{closeModal();if(S.view!=="prefs")go("prefs");setTimeout(()=>{const i=$("#s_pass");if(i){i.classList.add("show");i.scrollIntoView({block:"center"});i.select();const b=document.querySelector('[data-act="pwShow"]');if(b)b.textContent="إخفاء"}},300)},passReset:()=>passReset()});
+
+/* ---------- X. Products ⇄ Excel / Numbers: photos, barcodes, prices, stock count — review, merge, undo ---------- */
+Object.assign(LIB,{zip:"https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"});
+const RNS="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+const XLC=[
+ {k:"id",h:"المعرّف (لا تعدّله)",w:11,ro:1,en:"id"},
+ {k:"img",h:"الصورة",w:13,en:"image|photo|picture"},
+ {k:"name",h:"اسم الصنف",w:32,en:"name|item|product"},
+ {k:"nameEn",h:"الاسم بالإنجليزية",w:26,en:"english name|name en"},
+ {k:"sku",h:"الباركود",w:16,en:"barcode|sku|code"},
+ {k:"category",h:"القسم",w:16,en:"category"},
+ {k:"unit",h:"الوحدة",w:10,en:"unit"},
+ {k:"packQty",h:"عدد الحبات في الوحدة",w:10,n:1,en:"pack|pcs per unit"},
+ {k:"price",h:"سعر الجملة",w:11,n:3,en:"wholesale price|price"},
+ {k:"piecePrice",h:"سعر المفرد (الحبة)",w:11,n:3,en:"piece price|retail price"},
+ {k:"cost",h:"التكلفة",w:11,n:3,en:"cost"},
+ {k:"profit",h:"الربح للوحدة (للقراءة)",w:11,n:3,ro:1},
+ {k:"margin",h:"هامش الربح % (للقراءة)",w:10,ro:1},
+ {k:"stock",h:"المخزون في التطبيق (للقراءة)",w:12,ro:1},
+ {k:"count",h:"الجرد الفعلي (اكتب الكمية لتعديل المخزون)",w:16,n:1,en:"count|stock count|physical count"},
+ {k:"minStock",h:"حد التنبيه",w:9,n:1,en:"min stock|reorder"},
+ {k:"expiry",h:"تاريخ الانتهاء (سنة-شهر-يوم)",w:13,en:"expiry"},
+ {k:"web",h:"في الكتالوج (نعم/لا)",w:10,en:"catalog"},
+ {k:"active",h:"الحالة (نشط/موقوف)",w:11,en:"status|active"}];
+const XEF=["name","nameEn","sku","category","unit","packQty","price","piecePrice","cost","minStock","expiry","web","active"];
+const XTXT=["nameEn","sku","category","unit","expiry"];
+const XLBL={name:"الاسم",nameEn:"الاسم بالإنجليزية",sku:"الباركود",category:"القسم",unit:"الوحدة",packQty:"عدد الحبات",price:"سعر الجملة",piecePrice:"سعر المفرد",cost:"التكلفة",minStock:"حد التنبيه",expiry:"الانتهاء",web:"الكتالوج",active:"الحالة",img:"الصورة",stock:"المخزون"};
+const xHN=s=>nName(String(s||"").replace(/\(.*?\)/g,"").replace(/[—–:]/g," "));
+const xCol=i=>XLSX.utils.encode_col(i);
+const xSku=v=>{if(v===""||v==null)return"";if(typeof v==="number")return String(Math.round(v));return nDig(v).replace(/[\s\-]/g,"").replace(/\.0+$/,"")};
+function xAppV(p,k){switch(k){case"web":return p.web!==false;case"active":return p.active!==false;case"sku":return String(p.sku||"").trim();
+ case"price":case"cost":return r3(+p[k]||0);case"packQty":case"piecePrice":case"minStock":return +p[k]?r3(+p[k]):"";case"expiry":return p.expiry||"";default:return String(p[k]||"").trim()}}
+function xFileV(k,v){const E=undefined;if(v===""||v==null||(typeof v==="string"&&!v.trim()))return E;const s=String(v).trim();
+ switch(k){case"web":return/^(نعم|yes|y|1|true|✓|✔|ظاهر|يظهر|show)$/i.test(s)?true:/^(لا|no|n|0|false|✗|✘|مخفي|hide|hidden)$/i.test(s)?false:E;
+  case"active":return/^(نشط|فعال|active|yes|نعم|1|true)$/i.test(s)?true:/^(موقوف|متوقف|غير نشط|inactive|archived|no|لا|0|false)$/i.test(s)?false:E;
+  case"sku":return xSku(v);case"expiry":return pDate(v)||E;
+  case"price":case"cost":case"piecePrice":case"packQty":case"minStock":case"count":{const n=pNum(v);return isNaN(n)?NaN:(k==="packQty"||k==="minStock")?Math.round(n):r3(n)}
+  default:return s}}
+const xEq=(a,b)=>a===b||(typeof a==="number"&&typeof b==="number"&&Math.abs(a-b)<5e-4)||((a===""||a==null)&&(b===""||b==null));
+function eanOk(c){if(!/^\d+$/.test(c)||![8,12,13,14].includes(c.length))return true;const d=c.split("").map(Number);const chk=d.pop();let s=0;d.reverse().forEach((x,i)=>s+=x*(i%2?1:3));return(10-s%10)%10===chk}
+const xMime=p=>/\.png$/i.test(p)?"image/png":/\.gif$/i.test(p)?"image/gif":/\.webp$/i.test(p)?"image/webp":/\.bmp$/i.test(p)?"image/bmp":/\.(jpe?g|jfif)$/i.test(p)?"image/jpeg":"";
+async function xZip(buf){await loadScript(LIB.zip);return JSZip.loadAsync(buf)}
+function xz(zip){const P=new DOMParser();const X=async p=>{const f=zip.file(p);return f?P.parseFromString(await f.async("string"),"application/xml"):null};const T=(d,n)=>d?[...d.getElementsByTagNameNS("*",n)]:[];
+ const rp=(base,t)=>{if(t.startsWith("/"))return t.slice(1);const a=base.split("/");a.pop();for(const s of t.split("/")){if(s==="..")a.pop();else if(s&&s!==".")a.push(s)}return a.join("/")};
+ const rels=async p=>{const d=await X(p.replace(/([^/]+)$/,"_rels/$1.rels"));const m={};T(d,"Relationship").forEach(r=>m[r.getAttribute("Id")]=rp(p,r.getAttribute("Target")));return m};
+ const rid=(e,n)=>e.getAttributeNS(RNS,n)||e.getAttribute("r:"+n);return{X,T,rels,rid}}
+async function xBlob(zip,p){const f=p&&zip.file(p);const m=p&&xMime(p);if(!f||!m)return null;return new Blob([await f.async("uint8array")],{type:m})}
+/* pictures in a workbook → {sheetName:{absRow0:{blob,col}}} — floating pictures (Excel, Numbers, LibreOffice) and Excel 365 "Place in cell" */
+async function xlPics(buf){let zip;try{zip=await xZip(buf)}catch(e){return{}}const{X,T,rels,rid}=xz(zip);const wb=await X("xl/workbook.xml");if(!wb)return{};const wr=await rels("xl/workbook.xml");const out={};
+ let rich=null;try{const md=await X("xl/metadata.xml"),rv=await X("xl/richData/rdrichvalue.xml"),rr=await X("xl/richData/richValueRel.xml");if(md&&rv&&rr){const rrl=await rels("xl/richData/richValueRel.xml");const ids=T(rr,"rel").map(r=>rrl[rid(r,"id")]);const rvs=T(rv,"rv");
+  const fm=T(md,"futureMetadata").find(f=>f.getAttribute("name")==="XLRICHVALUE");const fbk=fm?T(fm,"bk").map(b=>{const x=T(b,"rvb")[0];return x?+x.getAttribute("i"):-1}):[];const types=T(md,"metadataType").map(t=>t.getAttribute("name"));rich={};
+  T(T(md,"valueMetadata")[0],"bk").forEach((b,i)=>{const rc=T(b,"rc")[0];if(!rc||types[+rc.getAttribute("t")-1]!=="XLRICHVALUE")return;const r=rvs[fbk[+rc.getAttribute("v")]];const v0=r&&T(r,"v")[0];if(v0)rich[i+1]=ids[+v0.textContent]})}}catch(e){rich=null}
+ for(const sh of T(wb,"sheet")){const sp=wr[rid(sh,"id")];if(!sp)continue;const sd=await X(sp);if(!sd)continue;const m={};out[sh.getAttribute("name")]=m;const sr=await rels(sp);
+  for(const dr of T(sd,"drawing")){const dp=sr[rid(dr,"id")];const dd=dp&&await X(dp);if(!dd)continue;const drl=await rels(dp);
+   for(const an of[...T(dd,"twoCellAnchor"),...T(dd,"oneCellAnchor")]){const fr=T(an,"from")[0],bl=T(an,"blip")[0];if(!fr||!bl)continue;let row=+T(fr,"row")[0].textContent;const col=+T(fr,"col")[0].textContent;
+    const to=T(an,"to")[0];if(to&&+T(to,"row")[0].textContent>row&&+((T(fr,"rowOff")[0]||{}).textContent||0)>400000&&+((T(to,"rowOff")[0]||{}).textContent||0)>0)row++;
+    if(m[row])continue;const b=await xBlob(zip,drl[rid(bl,"embed")]);if(b)m[row]={blob:b,col}}}
+  if(rich)for(const c of T(sd,"c")){const vm=c.getAttribute("vm");if(!vm||!rich[vm])continue;const rc=XLSX.utils.decode_cell(c.getAttribute("r"));if(m[rc.r])continue;const b=await xBlob(zip,rich[vm]);if(b)m[rc.r]={blob:b,col:rc.c}}}
+ return out}
+/* fast image fingerprints: exact (SHA-1) and visual (8×8 average hash) */
+async function xSha(b){try{const h=await crypto.subtle.digest("SHA-1",await b.arrayBuffer());return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
+function xImg(b){return new Promise(res=>{const u=URL.createObjectURL(b),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);res(null)};im.src=u})}
+async function xAHash(b){const im=await xImg(b);if(!im)return null;const c=document.createElement("canvas");c.width=c.height=8;const g=c.getContext("2d");g.drawImage(im,0,0,8,8);const d=g.getImageData(0,0,8,8).data;const v=[];for(let i=0;i<64;i++)v.push(d[i*4]*.3+d[i*4+1]*.59+d[i*4+2]*.11);const avg=v.reduce((a,b)=>a+b,0)/64;return v.map(x=>x>=avg?1:0)}
+async function xSameImg(a,b){const[x,y]=[await xAHash(a),await xAHash(b)];if(!x||!y)return false;let d=0;for(let i=0;i<64;i++)d+=x[i]!==y[i];return d<=6}
+async function xJpeg(b,mx){const im=await xImg(b);if(!im)return null;const r=Math.min(1,mx/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*r));c.height=Math.max(1,Math.round(im.height*r));const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+ const bl=await new Promise(res=>c.toBlob(res,"image/jpeg",.8));return bl?{bytes:new Uint8Array(await bl.arrayBuffer()),w:c.width,h:c.height,blob:bl}:null}
+
+/* ---------- export ---------- */
+async function xlExport(o){o=o||{};const tpl=!!o.tpl,withImg=!tpl&&o.img!==false;
+ try{await loadScript(LIB.xlsx)}catch(e){return toast("تعذر تحميل أداة Excel. تحقق من الاتصال بالإنترنت.")}
+ const biz=defBiz();const ps=tpl?[]:S.db.products.filter(p=>(!p.companyId||p.companyId===biz)&&p.track!=="bundle").sort((a,b)=>(a.category||"").localeCompare(b.category||"","ar")||a.name.localeCompare(b.name,"ar"));
+ if(!tpl&&!ps.length)return toast("لا توجد منتجات للتصدير بعد — صدّر «نموذج فارغ» واملأه.");
+ toast(withImg&&ps.some(p=>p.img)?"جارٍ تجهيز الملف مع الصور…":"جارٍ تجهيز الملف…",60000);
+ const yn=b=>b?"نعم":"لا";const H=XLC.map(c=>c.h);
+ const rowOf=p=>XLC.map(c=>{switch(c.k){case"id":return p.id||"";case"img":return"";case"web":return yn(p.web!==false);case"active":return p.active===false?"موقوف":"نشط";
+  case"profit":return pCost(p)&&+p.price?pProfit(p):"";case"margin":return pCost(p)&&+p.price?pMargin(p):"";case"stock":return p.track==="no"?"خدمة":+p.stock||0;case"count":return"";
+  case"price":case"cost":return r3(+p[c.k]||0);case"packQty":case"piecePrice":case"minStock":return +p[c.k]||"";default:return p[c.k]==null?"":String(p[c.k])}});
+ const ex=[{name:"أرز بسمتي — كيس 10 كجم",nameEn:"Basmati rice 10 kg",sku:"6281000000017",category:"مواد أساسية",unit:"كيس",price:4.5,cost:3.6,minStock:5,web:true},{name:"مياه معبأة 330 مل",nameEn:"Water 330 ml",sku:"6281000000024",category:"مشروبات",unit:"كرتون",packQty:24,price:1.2,piecePrice:.07,cost:.8,minStock:10,web:true}];
+ const rows=tpl?ex.map(p=>rowOf(p).map((v,i)=>XLC[i].k==="stock"||XLC[i].k==="profit"||XLC[i].k==="margin"?"":v)):ps.map(rowOf);
+ const ws=XLSX.utils.aoa_to_sheet([H,...rows]);const n=rows.length;
+ XLC.forEach((c,ci)=>{for(let r=1;r<=n;r++){const a=xCol(ci)+(r+1);const cell=ws[a];if(!cell)continue;if(c.k==="sku"||c.k==="id"){cell.t="s";cell.v=String(cell.v)}else if(c.n===3&&typeof cell.v==="number")cell.z="0.000"}});
+ ws["!cols"]=XLC.map(c=>({wch:c.w}));ws["!rows"]=[{hpt:44},...rows.map((_,i)=>withImg&&ps[i]&&ps[i].img?{hpt:54}:{hpt:20})];ws["!autofilter"]={ref:`A1:${xCol(XLC.length-1)}${n+1}`};ws["!views"]=[{RTL:true}];
+ const cats=[...new Set(S.db.products.filter(p=>!p.companyId||p.companyId===biz).map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ar"));
+ const wsC=XLSX.utils.aoa_to_sheet([["الأقسام الحالية"],...cats.map(c=>[c])]);wsC["!cols"]=[{wch:30}];wsC["!views"]=[{RTL:true}];
+ const help=[["طريقة التعديل — "+(tpl?"نموذج إضافة منتجات":"ملف منتجات "+coName(biz)+" بتاريخ "+today())],[""],
+  ["1) لا تعدّل عمود «المعرّف» ولا تحذفه: به يعرف التطبيق كل صنف حتى لو غيّرت اسمه أو باركوده."],
+  ["2) لإضافة صنف جديد: أضف صفًا في الأسفل واترك «المعرّف» فارغًا (الاسم وسعر الجملة مطلوبان)."],
+  ["3) الأعمدة المكتوب عليها «للقراءة» للاطلاع فقط ولا تؤثر عند الاستيراد."],
+  ["4) لتعديل المخزون: اكتب الكمية الفعلية في «الجرد الفعلي». يسجّل التطبيق جردًا رسميًا بالفروقات وقيمتها، ولا يغيّر المخزون مباشرة بدون أثر."],
+  ["5) الصور: ضع صورة الصنف فوق خانة «الصورة» في نفس الصف (Excel: Insert ← Pictures، أو Place in Cell). أو اكتب اسم ملف الصورة في خانة «الصورة» وأرفق الصور مع الملف عند الاستيراد، أو سمِّ ملف الصورة بالباركود."],
+  ["6) لإخفاء صنف من الكتالوج اكتب «لا» في «في الكتالوج». لإيقاف صنف اكتب «موقوف» في «الحالة». حذف الصف من الملف لا يحذف الصنف من التطبيق."],
+  ["7) الخانة الفارغة في الأسعار تعني «بدون تغيير» — لا تُصفَّر الأسعار بالخطأ."],
+  ["8) إذا عدّلت سعرًا في التطبيق بعد التصدير ولم تغيّره في الملف، يبقى سعر التطبيق الأحدث. وإذا تغيّر في المكانين يعرض لك التطبيق التعارض لتختار."],
+  ["9) في الآيفون (Numbers): افتح الملف من Files ← عدّل ← زر المشاركة ← Export ← Excel ← Save to Files، ثم استورده في التطبيق."],
+  ["10) في التطبيق: المنتجات ← استيراد / تصدير ← «استيراد الملف بعد التعديل». يعرض التطبيق كل تغيير قبل اعتماده، ويمكنك التراجع."],
+  [""],["الأسعار بالريال العماني (3 خانات عشرية). هذا ملف إدارة داخلي يحتوي التكلفة والربح — لا ترسله للزبائن."],["تصميم وبرمجة: م. ماجد الرميمي"]];
+ const wsH=XLSX.utils.aoa_to_sheet(help);wsH["!cols"]=[{wch:120}];wsH["!views"]=[{RTL:true}];
+ const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}],Sheets:[{},{},{},{Hidden:1}]};
+ XLSX.utils.book_append_sheet(wb,ws,"المنتجات");XLSX.utils.book_append_sheet(wb,wsC,"الأقسام");XLSX.utils.book_append_sheet(wb,wsH,"طريقة التعديل");
+ /* pictures */
+ const pics=[];if(withImg){for(let i=0;i<ps.length;i++){const p=ps[i];if(!p.img)continue;try{const b=await getBlob(p.img);if(!b||!b.type.startsWith("image/"))continue;const j=await xJpeg(b,360);if(j)pics.push({row:i+1,id:p.id,...j,h1:await xSha(j.blob)})}catch(e){}}}
+ const meta=[["idarat-products",1,now(),biz,APP_VER],...(tpl?[]:ps.map(p=>{const b={};XEF.forEach(k=>b[k]=xAppV(p,k));const pc=pics.find(x=>x.id===p.id);if(pc)b._img=pc.h1;return[p.id,JSON.stringify(b)]}))];
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meta),"_sync");
+ let out=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+ try{out=await xDecorate(out,{n,pics,cats:cats.length})}catch(e){console.warn("decorate",e)}
+ document.querySelectorAll(".toast").forEach(x=>x.remove());
+ const f=new File([out],(tpl?"نموذج-منتجات":"منتجات-"+coName(biz)+"-"+today()).replace(/\s+/g,"-")+".xlsx",{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+ S.local.xlLastExp={at:now(),n:ps.length,biz};saveLocal();
+ shareSheet(tpl?"نموذج إضافة المنتجات":"ملف المنتجات للتعديل",tpl?"املأ الصفوف ثم استورد الملف من «المنتجات ← استيراد / تصدير».":`${ps.length} صنف${pics.length?` و${pics.length} صورة`:""}. عدّله في Excel أو Numbers ثم استورده. ملف إدارة داخلي — يحتوي التكلفة والربح، لا ترسله للزبائن.`,[f])}
+/* header colours, frozen panes, drop-down lists, text barcodes, and pictures inside cells */
+async function xDecorate(buf,o){const zip=await xZip(buf);const sp="xl/worksheets/sheet1.xml";let s=await zip.file(sp).async("string");let st=await zip.file("xl/styles.xml").async("string");
+ const cnt=(tag)=>+((st.match(new RegExp(`<${tag} count="(\\d+)"`))||[])[1]||0);
+ const fo=cnt("fonts"),fi=cnt("fills"),xc=cnt("cellXfs");
+ st=st.replace(/<fonts count="\d+"/,`<fonts count="${fo+2}"`).replace("</fonts>",`<font><b/><sz val="12"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="12"/><color rgb="FF46514E"/><name val="Calibri"/><family val="2"/></font></fonts>`)
+  .replace(/<fills count="\d+"/,`<fills count="${fi+2}"`).replace("</fills>",`<fill><patternFill patternType="solid"><fgColor rgb="FF1F5C50"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEDF0EF"/><bgColor indexed="64"/></patternFill></fill></fills>`);
+ const n3=((st.match(/numFmtId="(\d+)" formatCode="0\.000"/)||[])[1])||"0";
+ const al=`<alignment horizontal="center" vertical="center" wrapText="1"/>`;
+ st=st.replace(/<cellXfs count="\d+"/,`<cellXfs count="${xc+5}"`).replace("</cellXfs>",
+  `<xf numFmtId="0" fontId="${fo}" fillId="${fi}" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1">${al}</xf>`+
+  `<xf numFmtId="0" fontId="${fo+1}" fillId="${fi+1}" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1">${al}</xf>`+
+  `<xf numFmtId="0" fontId="0" fillId="${fi+1}" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>`+
+  `<xf numFmtId="${n3}" fontId="0" fillId="${fi+1}" borderId="0" xfId="0" applyFill="1" applyNumberFormat="1" applyAlignment="1"><alignment vertical="center"/></xf>`+
+  `<xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>`);
+ const [HD,HR,RO,RON,TX]=[xc,xc+1,xc+2,xc+3,xc+4];
+ const roL=new Set(XLC.map((c,i)=>c.ro?xCol(i):"").filter(Boolean));
+ s=s.replace(/<c r="([A-Z]+)(\d+)"( s="\d+")?/g,(m,c,r,sa)=>{if(r==="1")return`<c r="${c}1" s="${roL.has(c)?HR:HD}"`;if(roL.has(c))return`<c r="${c}${r}" s="${sa&&n3!=="0"&&/s="\d+"/.test(sa)?RON:RO}"`;return m});
+ const skuC=XLC.findIndex(c=>c.k==="sku")+1;s=s.replace(new RegExp(`<col min="${skuC}" max="${skuC}" `),`<col min="${skuC}" max="${skuC}" style="${TX}" `);
+ s=s.replace(/<sheetView([^>]*?)\/>/,`<sheetView$1><pane xSplit="3" ySplit="1" topLeftCell="D2" activePane="bottomRight" state="frozen"/><selection pane="bottomRight" activeCell="D2" sqref="D2"/></sheetView>`);
+ const L=k=>xCol(XLC.findIndex(c=>c.k===k)),last=Math.max(o.n+300,500);const rg=k=>`${L(k)}2:${L(k)}${last}`;
+ const dv=[`<dataValidation type="list" allowBlank="1" showErrorMessage="1" errorTitle="في الكتالوج" error="اختر نعم أو لا" sqref="${rg("web")}"><formula1>"نعم,لا"</formula1></dataValidation>`,
+  `<dataValidation type="list" allowBlank="1" showErrorMessage="1" errorTitle="الحالة" error="اختر نشط أو موقوف" sqref="${rg("active")}"><formula1>"نشط,موقوف"</formula1></dataValidation>`,
+  `<dataValidation type="decimal" operator="greaterThanOrEqual" allowBlank="1" showErrorMessage="1" errorTitle="قيمة غير صحيحة" error="أدخل رقمًا صفرًا أو أكبر" sqref="${["packQty","price","piecePrice","cost","count","minStock"].map(rg).join(" ")}"><formula1>0</formula1></dataValidation>`];
+ if(o.cats)dv.push(`<dataValidation type="list" allowBlank="1" showErrorMessage="0" sqref="${rg("category")}"><formula1>'الأقسام'!$A$2:$A$${o.cats+1}</formula1></dataValidation>`);
+ const dvx=`<dataValidations count="${dv.length}">${dv.join("")}</dataValidations>`;
+ s=/<ignoredErrors/.test(s)?s.replace("<ignoredErrors",dvx+"<ignoredErrors"):s.replace("</worksheet>",dvx+"</worksheet>");
+ if(o.pics&&o.pics.length){const ic=XLC.findIndex(c=>c.k==="img");const cw=(XLC[ic].w+.83)*7+5,rh=54*96/72,E=9525;let dx="",rl="";
+  o.pics.forEach((p,i)=>{const sc=Math.min((cw-8)/p.w,(rh-6)/p.h);const w=Math.round(p.w*sc),h=Math.round(p.h*sc);const ox=Math.round((cw-w)/2),oy=Math.round((rh-h)/2);
+   zip.file(`xl/media/xlimg${i+1}.jpeg`,p.bytes);rl+=`<Relationship Id="rId${i+1}" Type="${RNS}/image" Target="../media/xlimg${i+1}.jpeg"/>`;
+   dx+=`<xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>${ic}</xdr:col><xdr:colOff>${ox*E}</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>${oy*E}</xdr:rowOff></xdr:from><xdr:to><xdr:col>${ic}</xdr:col><xdr:colOff>${(ox+w)*E}</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>${(oy+h)*E}</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${i+2}" name="صورة ${i+1}" descr="${p.id}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${i+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w*E}" cy="${h*E}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`});
+  zip.file("xl/drawings/drawing1.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="${RNS}">${dx}</xdr:wsDr>`);
+  zip.file("xl/drawings/_rels/drawing1.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rl}</Relationships>`);
+  const srp="xl/worksheets/_rels/sheet1.xml.rels";const ex=zip.file(srp)?await zip.file(srp).async("string"):`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>`;
+  zip.file(srp,ex.replace("</Relationships>",`<Relationship Id="rIdXlDr" Type="${RNS}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`));
+  s=s.replace("</worksheet>",`<drawing r:id="rIdXlDr"/></worksheet>`);
+  let ct=await zip.file("[Content_Types].xml").async("string");if(!/Extension="jpeg"/.test(ct))ct=ct.replace("<Default ",`<Default Extension="jpeg" ContentType="image/jpeg"/><Default `);ct=ct.replace("</Types>",`<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>`);zip.file("[Content_Types].xml",ct)}
+ zip.file(sp,s);zip.file("xl/styles.xml",st);return zip.generateAsync({type:"uint8array",compression:"DEFLATE"})}
+
+/* ---------- import: read any file, detect the round-trip format ---------- */
+{const _rx=readXlsx;readXlsx=async function(file){await loadScript(LIB.xlsx);const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:"array",cellDates:false});let pics={};try{pics=await xlPics(buf)}catch(e){}
+ return wb.SheetNames.map(n=>{const ws=wb.Sheets[n];const off=ws["!ref"]?XLSX.utils.decode_range(ws["!ref"]).s.r:0;const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:"",blankrows:true}).map(r=>r.map(c=>typeof c==="string"?c.trim():c));const pm={};Object.entries(pics[n]||{}).forEach(([r,v])=>{if(r-off>=0)pm[r-off]=v});
+  return{name:n,rows,pics:pm,hidden:(wb.Workbook&&wb.Workbook.Sheets||[]).some(s=>s.name===n&&s.Hidden)}}).filter(s=>n2(s))
+ function n2(s){return s.name==="_sync"||s.rows.some(r=>r.some(c=>c!==""))}}}
+function xHead(rows){for(let i=0;i<Math.min(8,rows.length);i++){const hs=rows[i].map(xHN);if(hs.some(h=>h==="المعرف"||h==="id")&&hs.some(h=>h===xHN("اسم الصنف")||h==="name"))return i}return-1}
+function xMap(hrow){const m={};hrow.forEach((h,i)=>{const n=xHN(h);if(!n)return;const c=XLC.find(c=>xHN(c.h)===n)||XLC.find(c=>c.en&&c.en.split("|").includes(n))||XLC.find(c=>n.startsWith(xHN(c.h)));if(c&&m[c.k]===undefined)m[c.k]=i});return m}
+async function xlPick(){const i=document.createElement("input");i.type="file";i.multiple=true;i.accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt,.pdf,.zip,application/zip,application/pdf,image/*,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv";i.onchange=()=>xlFiles([...i.files]);i.click()}
+async function xlFiles(files){if(!files||!files.length)return;let sheetF=null;const imgs={};const add=(nm,b)=>{const k=nm.split("/").pop().replace(/\.[^.]+$/,"").trim().toLowerCase();if(k)imgs[k]=b};
+ try{for(const f of files){const ext=(f.name.split(".").pop()||"").toLowerCase();
+  if(ext==="zip"||f.type==="application/zip"){const z=await xZip(await f.arrayBuffer());for(const p of Object.keys(z.files)){if(z.files[p].dir||/(^|\/)(__MACOSX|\.)/.test(p))continue;const e=(p.split(".").pop()||"").toLowerCase();
+    if(!sheetF&&["xlsx","xls","xlsm","ods","csv"].includes(e))sheetF=new File([await z.file(p).async("uint8array")],p.split("/").pop());else if(xMime(p))add(p,await xBlob(z,p))}}
+  else if(f.type.startsWith("image/")&&files.length>1)add(f.name,f);else if(!sheetF)sheetF=f}}catch(e){return toast("تعذر فتح الملف المضغوط.",4000)}
+ if(!sheetF)return toast("اختر ملف Excel أو CSV (ويمكن اختيار الصور معه).",4500);
+ const ext=(sheetF.name.split(".").pop()||"").toLowerCase();if(!["xlsx","xls","xlsm","ods","csv","tsv","txt"].includes(ext))return impFile(sheetF);
+ let sheets;try{toast("جارٍ قراءة الملف…",60000);sheets=["csv","tsv","txt"].includes(ext)?await readCsv(sheetF):await readXlsx(sheetF)}catch(e){document.querySelectorAll(".toast").forEach(x=>x.remove());return toast(/load/.test(e.message)?"تعذر تحميل أداة القراءة. تحقق من الاتصال بالإنترنت.":"تعذر قراءة الملف. تأكد أنه غير محمي بكلمة مرور.",4500)}
+ document.querySelectorAll(".toast").forEach(x=>x.remove());
+ const sh=sheets.find(s=>s.name!=="_sync"&&xHead(s.rows)>=0);
+ if(!sh){S.xlExtImgs=imgs;return impFile(sheetF)}
+ const metaS=sheets.find(s=>s.name==="_sync");let meta=null;if(metaS&&metaS.rows[0]&&metaS.rows[0][0]==="idarat-products"){meta={at:+metaS.rows[0][2]||0,biz:metaS.rows[0][3],base:{}};metaS.rows.slice(1).forEach(r=>{try{if(r[0])meta.base[r[0]]=JSON.parse(r[1])}catch(e){}})}
+ const hi=xHead(sh.rows),map=xMap(sh.rows[hi]);const recs=[];
+ sh.rows.slice(hi+1).forEach((r,j)=>{const ri=hi+1+j;const pic=sh.pics&&sh.pics[ri];const has=r.some(c=>String(c==null?"":c).trim()!=="");if(!has&&!pic)return;const v={};Object.entries(map).forEach(([k,i])=>v[k]=r[i]);recs.push({row:ri+1,v,pic:pic&&pic.blob})});
+ const bz=meta&&S.db.companies.some(c=>c.id===meta.biz)?meta.biz:defBiz();
+ S.xl={file:sheetF.name,recs,map,meta,imgs,opt:{biz:bz,conf:"file"},cache:{}};toast("جارٍ مقارنة الملف بمنتجاتك…",60000);await xlPlan();document.querySelectorAll(".toast").forEach(x=>x.remove());xlUI()}
+/* three-way comparison: file ⇄ app ⇄ values at export time */
+async function xlPlan(){const X=S.xl,o=X.opt,biz=o.biz;const base=(X.meta&&X.meta.base)||{};
+ const pool=S.db.products.filter(p=>p.track!=="bundle"&&(!p.companyId||p.companyId===biz));const byId={},bySku={},byNm={};S.db.products.forEach(p=>byId[p.id]=p);pool.forEach(p=>{if(p.sku)bySku[String(p.sku).trim()]=p;byNm[nName(p.name)]=p});
+ const P={add:[],upd:[],same:0,kept:0,conf:[],err:[],warn:[],stock:[],imgs:0,missing:0};const seen={};
+ for(const R of X.recs){const v={};let bad=[];XEF.concat(["count"]).forEach(k=>{if(X.map[k]===undefined)return;const f=xFileV(k,R.v[k]);if(typeof f==="number"&&isNaN(f))bad.push(`«${XLBL[k]||"الجرد الفعلي"}» ليس رقمًا: ${R.v[k]}`);else if(typeof f==="number"&&f<0)bad.push(`«${XLBL[k]||"الجرد"}» سالب`);else v[k]=f});
+  const rid=String(R.v.id||"").trim();let ex=(rid&&byId[rid])||(v.sku&&bySku[v.sku])||(v.name&&byNm[nName(v.name)])||null;if(ex&&ex.track==="bundle")ex=null;
+  const key=ex?ex.id:"n:"+(v.sku||nName(v.name||""));if(seen[key]){P.err.push({row:R.row,name:v.name||(ex&&ex.name)||"",msg:`مكرر في الملف (نفس الصنف في الصف ${seen[key]})`});continue}seen[key]=R.row;
+  if(bad.length){P.err.push({row:R.row,name:v.name||(ex&&ex.name)||"",msg:bad.join(" · ")});continue}
+  const imgKey=v.sku&&X.imgs[v.sku.toLowerCase()]?v.sku.toLowerCase():String(R.v.img||"").trim().toLowerCase().replace(/\.[^.]+$/,"");let blob=R.pic||X.imgs[imgKey]||(rid&&X.imgs[rid.toLowerCase()])||(v.name&&X.imgs[String(v.name).trim().toLowerCase()])||null;
+  if(!ex){if(!v.name){if(Object.keys(v).length||blob)P.err.push({row:R.row,name:"",msg:"اسم الصنف مطلوب"});continue}
+   if(!(v.price>0)){P.err.push({row:R.row,name:v.name,msg:"سعر الجملة مطلوب للصنف الجديد"});continue}
+   const d=prodDup({name:v.name,sku:v.sku,companyId:biz},null);if(d){P.err.push({row:R.row,name:v.name,msg:`موجود مسبقًا باسم «${d.name}»${d.sku&&d.sku===v.sku?" وبنفس الباركود":""}`});continue}
+   if(rid)P.warn.push({row:R.row,name:v.name,msg:"المعرّف غير موجود في هذا الجهاز — سيُضاف كصنف جديد"});
+   xWarn(P,R,v,v);P.add.push({R,v,blob});if(blob)P.imgs++;continue}
+  const b=base[ex.id];const ch={},cf=[];
+  for(const k of XEF){if(X.map[k]===undefined)continue;let f=v[k];const a=xAppV(ex,k);const bk=b?b[k]:undefined;
+   if(f===undefined){if(XTXT.includes(k)&&bk!==undefined&&bk!==""&&xEq(a,bk))f="";else continue}
+   if(xEq(f,a))continue;if(bk!==undefined&&xEq(f,bk)){P.kept++;continue}
+   if(bk!==undefined&&!xEq(a,bk)){cf.push({k,a,f});continue}ch[k]=f}
+  if(ch.sku){const o2=S.db.products.find(p=>p.id!==ex.id&&String(p.sku||"").trim()===ch.sku&&(!p.companyId||!ex.companyId||p.companyId===ex.companyId));if(o2){P.err.push({row:R.row,name:ex.name,msg:`الباركود ${ch.sku} مستخدم للصنف «${o2.name}» — لم يُغيَّر`});delete ch.sku}}
+  if(ch.name){const d=prodDup({...ex,name:ch.name},ex.id);if(d&&nName(d.name)===nName(ch.name)){P.err.push({row:R.row,name:ex.name,msg:`الاسم «${ch.name}» مستخدم لصنف آخر — لم يُغيَّر`});delete ch.name}}
+  let img=null;if(blob){const ck=ex.id+":"+R.row;if(X.cache[ck]===undefined){let same=false;const h=await xSha(blob);if(b&&b._img&&b._img===h)same=true;else if(ex.img){try{const cur=await getBlob(ex.img);if(cur)same=await xSameImg(cur,blob)}catch(e){}}X.cache[ck]=same}if(!X.cache[ck])img=blob}
+  let st=null;if(v.count!==undefined&&ex.track!=="no"&&!xEq(v.count,r3(+ex.stock||0)))st={sys:r3(+ex.stock||0),count:v.count};
+  xWarn(P,R,{...v,...ch},{...ex,...ch});
+  cf.forEach(c=>P.conf.push({R,ex,...c}));
+  if(Object.keys(ch).length||img||st||cf.length){P.upd.push({R,ex,ch,img,st,cf});if(img)P.imgs++;if(st)P.stock.push(st)}else P.same++}
+ const inFile=new Set(P.upd.map(x=>x.ex.id));X.recs.forEach(R=>{const id=String(R.v.id||"").trim();if(id)inFile.add(id)});P.missing=X.meta?Object.keys(X.meta.base).filter(id=>byId[id]&&!inFile.has(id)&&!P.upd.some(u=>u.ex.id===id)).length:0;
+ X.P=P;return P}
+function xWarn(P,R,v,p){const nm=p.name||v.name||"";if(v.sku&&!eanOk(v.sku))P.warn.push({row:R.row,name:nm,msg:`الباركود ${v.sku} رقم التحقق فيه لا يطابق — راجعه`});
+ const pr=+p.price||0,co=+p.cost||0;if(pr>0&&co>0){const net=sset().vatInc!==false?pr*100/(100+vatR()):pr;if(net<co)P.warn.push({row:R.row,name:nm,msg:`سعر الجملة ${money(pr)} أقل من التكلفة ${money(co)} — بيع بخسارة`})}
+ if(+p.piecePrice>0&&+p.packQty>1&&pr>0&&p.piecePrice*p.packQty<pr*.9)P.warn.push({row:R.row,name:nm,msg:"سعر المفرد × عدد الحبات أقل من سعر الجملة"});
+ if(v.expiry&&v.expiry<today())P.warn.push({row:R.row,name:nm,msg:`تاريخ الانتهاء ${v.expiry} مضى`})}
+const xFmt=(k,v)=>v===""||v==null?"—":typeof v==="boolean"?(k==="active"?(v?"نشط":"موقوف"):(v?"يظهر":"مخفي")):["price","cost","piecePrice"].includes(k)?money(v):String(v);
+function xlUI(){const X=S.xl;if(!X)return;const P=X.P,o=X.opt;const nCh=P.add.length+P.upd.filter(u=>Object.keys(u.ch).length||u.img||u.st||(u.cf.length&&o.conf==="file")).length;
+ const li=(arr,f,max=150)=>arr.slice(0,max).map(f).join("")+(arr.length>max?`<div class="muted">… و${arr.length-max} أخرى</div>`:"");
+ const row=x=>`<span class="muted num" style="font-size:11.5px">صف ${x}</span>`;
+ const html=`<h2>${I.box} مراجعة الملف قبل الاعتماد</h2><div class="muted" style="font-size:12.5px;margin-top:-4px">${esc(X.file)}${X.meta?` · صُدِّر ${fdate(new Date(X.meta.at).toISOString().slice(0,10))}`:""}</div>
+ <div class="row" style="flex-wrap:wrap;gap:6px"><span class="pill ok">جديد <b class="num">${P.add.length}</b></span><span class="pill info">تعديل <b class="num">${P.upd.length}</b></span><span class="pill">بلا تغيير <b class="num">${P.same}</b></span>${P.stock.length?`<span class="pill info">جرد <b class="num">${P.stock.length}</b></span>`:""}${P.imgs?`<span class="pill info">صور <b class="num">${P.imgs}</b></span>`:""}${P.conf.length?`<span class="pill warn">تعارض <b class="num">${P.conf.length}</b></span>`:""}${P.err.length?`<span class="pill bad" style="background:#fde8e8;color:#a32020">أخطاء <b class="num">${P.err.length}</b></span>`:""}${P.warn.length?`<span class="pill warn">تنبيهات <b class="num">${P.warn.length}</b></span>`:""}</div>
+ ${P.kept?`<div class="muted" style="font-size:12.5px">✓ ${P.kept} قيمة عدّلتها في التطبيق بعد التصدير بقيت كما هي (الملف لم يغيّرها).</div>`:""}
+ ${P.missing?`<div class="muted" style="font-size:12.5px">${P.missing} صنف غير موجود في الملف — لن يُحذف شيء من التطبيق.</div>`:""}
+ ${P.err.length?`<details open class="xlsec"><summary>أخطاء لن تُستورد (صحّحها في الملف وأعد الاستيراد)</summary>${li(P.err,e=>`<div class="xlr">${row(e.row)} <b>${esc(e.name||"")}</b> — ${esc(e.msg)}</div>`)}</details>`:""}
+ ${P.conf.length?`<details open class="xlsec"><summary>تعارض: تغيّرت القيمة في التطبيق وفي الملف</summary><div class="fld" style="margin:6px 0"><select id="xl_conf"><option value="file"${o.conf==="file"?" selected":""}>اعتمد قيمة الملف</option><option value="app"${o.conf==="app"?" selected":""}>أبقِ قيمة التطبيق</option></select></div>${li(P.conf,c=>`<div class="xlr">${row(c.R.row)} <b>${esc(c.ex.name)}</b> — ${XLBL[c.k]}: التطبيق ${esc(xFmt(c.k,c.a))} · الملف ${esc(xFmt(c.k,c.f))}</div>`)}</details>`:""}
+ ${P.upd.length?`<details class="xlsec"${P.upd.length<=25?" open":""}><summary>التعديلات (${P.upd.length})</summary>${li(P.upd,u=>`<div class="xlr">${row(u.R.row)} <b>${esc(u.ex.name)}</b> — ${[...Object.entries(u.ch).map(([k,v])=>`${XLBL[k]}: ${esc(xFmt(k,xAppV(u.ex,k)))} ← ${esc(xFmt(k,v))}`),u.st?`المخزون: ${u.st.sys} ← ${u.st.count} (جرد)`:"",u.img?"صورة جديدة":""].filter(Boolean).join(" · ")||"تعارض فقط"}</div>`)}</details>`:""}
+ ${P.add.length?`<details class="xlsec"${P.add.length<=25?" open":""}><summary>أصناف جديدة (${P.add.length})</summary>${li(P.add,a=>`<div class="xlr">${row(a.R.row)} <b>${esc(a.v.name)}</b> — ${money(a.v.price)}${a.v.sku?` · ${esc(a.v.sku)}`:""}${a.v.count!==undefined?` · كمية ${a.v.count}`:""}${a.blob?" · صورة":""}</div>`)}</details>`:""}
+ ${P.warn.length?`<details class="xlsec"><summary>تنبيهات للمراجعة (لا تمنع الاستيراد)</summary>${li(P.warn,e=>`<div class="xlr">${row(e.row)} <b>${esc(e.name||"")}</b> — ${esc(e.msg)}</div>`)}</details>`:""}
+ ${P.add.length?`<div class="fld"><label>الأصناف الجديدة تُضاف إلى</label><select id="xl_biz">${S.db.companies.map(c=>`<option value="${c.id}"${c.id===o.biz?" selected":""}>${esc(c.name)}</option>`).join("")}</select></div>`:""}
+ <div class="muted" style="font-size:12.5px">${I.lock.replace("<svg",'<svg width="14" height="14" style="vertical-align:-2px;flex:none"')} تُحفظ نسخة من المنتجات قبل الاعتماد، ويمكنك «التراجع عن آخر استيراد» من نفس القائمة.</div>
+ <div class="row-end"><button class="btn ghost" data-act="close">إلغاء</button><span class="sp"></span><button class="btn primary" data-act="xlGo"${nCh?"":" disabled"}>${nCh?`اعتماد ${nCh} تغيير`:"لا توجد تغييرات"}</button></div>`;
+ const sx=$("#scrim .sheet");if(sx&&sx.dataset.xl){const y=sx.scrollTop;sx.innerHTML=html;sx.scrollTop=y}else{modal(html,true);const n=$("#scrim .sheet");if(n)n.dataset.xl=1}}
+document.addEventListener("change",async e=>{const t=e.target;if(!S.xl||!t.closest||!t.closest("#scrim"))return;if(t.id==="xl_conf"){S.xl.opt.conf=t.value;xlUI()}if(t.id==="xl_biz"){S.xl.opt.biz=t.value;await xlPlan();xlUI()}});
+async function xlGo(){const X=S.xl;if(!X||X.busy)return;X.busy=1;const P=X.P,o=X.opt;toast("جارٍ الاعتماد…",60000);
+ const snap={id:uid(),at:now(),date:today(),file:X.file,before:[],added:[],count:null,n:{add:0,upd:0,img:0,stock:0}};const took=new Set();const keep=p=>{if(!took.has(p.id)){took.add(p.id);snap.before.push(JSON.parse(JSON.stringify(p)))}};
+ const putImg=async b=>{const nm=b.name||("p."+((b.type||"image/jpeg").split("/")[1]||"jpg"));const[m]=await storeFiles([b instanceof File?b:new File([b],nm,{type:b.type||"image/jpeg"})]);return m.id};
+ const lines=[];
+ try{for(const u of P.upd){const cur=prodById(u.ex.id);if(!cur)continue;const set={...u.ch};if(o.conf==="file")u.cf.forEach(c=>set[c.k]=c.f);
+   if(!Object.keys(set).length&&!u.img&&!u.st)continue;keep(cur);const np={...cur,...set};if(u.img){np.img=await putImg(u.img);snap.n.img++}
+   if(u.st){lines.push({productId:cur.id,name:np.name,unit:np.unit||"",sys:r3(+cur.stock||0),count:u.st.count,diff:r3(u.st.count-(+cur.stock||0)),cost:+np.cost||0});np.stock=u.st.count;np.counted=today();snap.n.stock++}
+   upsert("products",np);snap.n.upd++}
+  for(const a of P.add){const v=a.v;const np={id:uid(),name:v.name,track:"yes",active:v.active!==false,web:v.web!==false,companyId:o.biz,unit:v.unit||"حبة",minStock:v.minStock!==undefined?v.minStock:5,stock:v.count!==undefined?v.count:0,price:v.price,cost:v.cost||0,imported:today()};
+   ["nameEn","sku","category","packQty","piecePrice","expiry"].forEach(k=>{if(v[k]!==undefined&&v[k]!=="")np[k]=v[k]});if(a.blob){np.img=await putImg(a.blob);snap.n.img++}upsert("products",np);snap.added.push(np.id);snap.n.add++}
+  if(lines.length){const c=upsert("counts",{id:uid(),date:today(),companyId:o.biz||scopeCo()||"",lines,val:r3(lines.reduce((s,l)=>s+l.diff*l.cost,0)),n:lines.length,by:devName(),note:"من ملف Excel: "+X.file});snap.count=c.id}
+  await save()}catch(e){X.busy=0;document.querySelectorAll(".toast").forEach(x=>x.remove());return toast("تعذر الاعتماد: "+(e.message||e),5000)}
+ const hist=(await kvGet("xlUndo"))||[];hist.unshift(snap);await kvSet("xlUndo",hist.slice(0,6));
+ const log=S.local.xlLog||[];log.unshift({id:snap.id,at:snap.at,file:X.file,n:snap.n});S.local.xlLog=log.slice(0,30);saveLocal();
+ S.xl=null;closeModal();document.querySelectorAll(".toast").forEach(x=>x.remove());S.local.co=o.biz;saveLocal();if(S.view!=="s-prod")go("s-prod");else render();
+ toast(`تم: ${snap.n.add} جديد · ${snap.n.upd} تعديل${snap.n.img?` · ${snap.n.img} صورة`:""}${snap.n.stock?` · جرد ${snap.n.stock}`:""}${webOn()&&wcfg().biz===o.biz?" · سيُحدَّث الكتالوج":""}`,5500)}
+async function xlHist(){const hist=(await kvGet("xlUndo"))||[];const log=S.local.xlLog||[];const top=hist.find(h=>!h.undone);
+ modal(`<h2>سجل استيراد المنتجات</h2>${log.length?`<div class="list">${log.map(l=>{const h=hist.find(x=>x.id===l.id);return`<div class="item" style="cursor:default"><span class="main"><span class="t">${esc(l.file)}</span><div class="s num">${new Date(l.at).toLocaleString("en-GB",{dateStyle:"short",timeStyle:"short"})} · ${l.n.add} جديد · ${l.n.upd} تعديل${l.n.img?` · ${l.n.img} صورة`:""}${l.n.stock?` · جرد ${l.n.stock}`:""}${h&&h.undone?` · <b>تم التراجع</b>`:""}</div></span>${top&&top.id===l.id?`<button class="btn sm danger" data-act="xlUndo" data-id="${l.id}">تراجع</button>`:""}</div>`}).join("")}</div>`:`<p class="muted">لا يوجد استيراد بعد.</p>`}
+ <div class="muted" style="font-size:12.5px">التراجع متاح لآخر استيراد في هذا الجهاز: يعيد الأصناف المعدّلة لحالتها قبل الاستيراد، ويزيل الأصناف الجديدة (أو يوقفها إن بيعت).</div><div class="row-end"><span class="sp"></span><button class="btn ghost" data-act="close">إغلاق</button></div>`)}
+async function xlUndo(id){const hist=(await kvGet("xlUndo"))||[];const h=hist.find(x=>x.id===id);if(!h||h.undone)return;
+ const later=h.before.filter(b=>{const c=prodById(b.id);return c&&c.u>h.at+5000}).length+h.added.filter(i=>{const c=prodById(i);return c&&c.u>h.at+5000}).length;
+ ask(`التراجع عن استيراد «${h.file}»: إعادة ${h.before.length} صنف لحالته السابقة وإزالة ${h.added.length} صنف جديد.${later?` تنبيه: ${later} منها عُدّل بعد الاستيراد وستضيع تلك التعديلات.`:""}`,async()=>{
+  const used=new Set();S.db.sales.forEach(s=>(s.items||[]).forEach(i=>used.add(i.productId)));(S.db.orders||[]).forEach(o=>(o.items||[]).forEach(i=>used.add(i.productId)));
+  h.before.forEach(b=>upsert("products",{...b}));let off=0;h.added.forEach(i=>{const p=prodById(i);if(!p)return;if(used.has(i)){upsert("products",{...p,active:false,web:false});off++}else{S.db.products=S.db.products.filter(x=>x.id!==i);S.db.del[i]=now();try{logIt("حذف (تراجع عن استيراد)","products",p)}catch(e){}}});
+  if(h.count){const c=(S.db.counts||[]).find(x=>x.id===h.count);if(c)upsert("counts",{...c,undone:today(),note:(c.note||"")+" — تم التراجع"})}
+  h.undone=today();await kvSet("xlUndo",hist);await save();closeModal();render();toast(`تم التراجع${off?` · ${off} صنف بيع منه أُوقف بدل الإزالة`:""}`,4500)},"تراجع")}
+/* menu */
+impMenu=function(){const L=S.local.xlLastExp;modal(`<h2>${I.box} استيراد المنتجات وتصديرها</h2>
+ <div class="panel xlbox"><div style="font-weight:700">تعديل المنتجات في Excel أو Numbers</div><div class="muted" style="font-size:13px;margin:4px 0 8px">ملف واحد بكل أصنافك: الصور، الباركود، الأسماء بالعربية والإنجليزية، الأسعار، التكلفة، المخزون. عدّله في الكمبيوتر أو الآيفون ثم أعده هنا — يعرض التطبيق كل تغيير قبل اعتماده ويمكنك التراجع.</div>
+ <label class="row" style="gap:8px;font-size:13.5px;margin-bottom:8px"><input type="checkbox" id="xl_img"${S.local.xlNoImg?"":" checked"} style="width:auto"> مع صور المنتجات داخل الملف</label>
+ <div class="grid g2"><button class="btn primary" style="justify-content:center" data-act="xlExp">1 · تصدير ملف المنتجات</button><button class="btn" style="justify-content:center" data-act="xlPick">2 · استيراد الملف بعد التعديل</button></div>
+ ${L?`<div class="muted num" style="font-size:12px;margin-top:6px">آخر تصدير: ${new Date(L.at).toLocaleString("en-GB",{dateStyle:"short",timeStyle:"short"})} · ${L.n} صنف</div>`:""}</div>
+ <div class="list"><button class="item" data-act="xlPick"><span class="ico">${I.plus}</span><span class="main"><span class="t">استيراد قائمة مورد</span><div class="s">Excel أو CSV أو PDF أو صورة — يتعرّف على الأعمدة وصور الأصناف تلقائيًا</div></span></button>
+ <button class="item" data-act="impTpl"><span class="ico">${I.doc}</span><span class="main"><span class="t">نموذج Excel فارغ</span><div class="s">لإضافة أصناف جديدة دفعة واحدة، بقوائم منسدلة وشرح</div></span></button>
+ <button class="item" data-act="xlHist"><span class="ico">${I.clock||I.doc}</span><span class="main"><span class="t">سجل الاستيراد والتراجع</span><div class="s">ما تغيّر في كل استيراد، والتراجع عن آخر استيراد</div></span></button>
+ <button class="item" data-act="prodList"><span class="ico">${I.pdf}</span><span class="main"><span class="t">طباعة قائمة المنتجات</span><div class="s">للإدارة (التكلفة والربح والمخزون) أو للزبائن (الأسعار فقط)، حسب القسم</div></span></button>
+ <button class="item" data-act="catMgr"><span class="ico">${I.gear}</span><span class="main"><span class="t">إدارة الأقسام</span><div class="s">تصنيف المنتجات وإعادة تسمية الأقسام ودمجها</div></span></button>
+ <button class="item" data-act="ofPDF"><span class="ico">${I.pdf}</span><span class="main"><span class="t">نموذج طلب PDF للزبائن</span><div class="s">قائمة أسعار بخانة للكمية ورمز QR للكتالوج — بدون التكلفة والربح</div></span></button></div>
+ <div class="row-end"><span class="sp"></span><button class="btn ghost" data-act="close">إغلاق</button></div>`)};
+pickImport=xlPick;
+document.head.insertAdjacentHTML("beforeend",`<style>.xlbox{flex-shrink:0;padding:14px;margin:0;border:1.5px solid var(--acc,#1f5c50)}.xlsec{flex-shrink:0;border:1px solid var(--line,#e3e7e5);border-radius:12px;padding:8px 10px;max-height:34vh;overflow:auto}.xlsec summary{cursor:pointer;font-weight:600;font-size:13.5px}.xlr{font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line,#e3e7e5);line-height:1.5}.xlr:last-child{border:0}</style>`);
+Object.assign(ACT2,{xlExp:()=>{const c=$("#xl_img");const img=c?c.checked:true;S.local.xlNoImg=!img;saveLocal();closeModal();xlExport({img})},xlPick:()=>{closeModal();xlPick()},impTpl:()=>{closeModal();xlExport({tpl:true})},impExp:()=>{closeModal();xlExport({})},xlGo:()=>xlGo(),xlHist:()=>xlHist(),xlUndo:ds=>xlUndo(ds.id)});
 
 /* ========== events ========== */
 function act(a,ds,el){switch(a){
