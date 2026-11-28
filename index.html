@@ -673,7 +673,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="3.2";
+const APP_VER="3.3";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -1828,6 +1828,7 @@ function greet(d){d=d||new Date();const h=d.getHours();return h>=4&&h<12?"صبا
 setInterval(()=>{const h=document.querySelector("main h1");if(S.view==="home"&&h&&h.textContent!==greet()&&!document.hidden)h.textContent=greet()},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.view==="home"){const h=document.querySelector("main h1");if(h)h.textContent=greet()}});
 const CHANGES=[
+ ["3.3","التحديث من داخل التطبيق: عند رفع إصدار جديد يظهر شريط «تحديث جديد متاح» بزر «تحديث الآن» الذي يحفظ بياناتك ويزامنها ثم يحمّل الإصدار الجديد دون إغلاق التطبيق، وزر «البحث عن تحديث» في الإعدادات."],
  ["3.2","مزامنة Google Drive تعمل الآن في التطبيق المثبت على شاشة الآيفون وفي Dock الماك: الدخول إلى Google داخل التطبيق ثم العودة تلقائيًا بدل النافذة المنبثقة، مع حفظ الإذن وتجديده تلقائيًا عند فتح التطبيق. عنوان إعادة التوجيه وخطوات Google Cloud المحدّثة في الإعدادات."],
  ["3.1","زر «رجوع» واضح أعلى كل صفحة يعود للصفحة التي جئت منها، والسحب من الحافة اليمنى للرجوع في الآيفون، واختصار ⌥→ أو ⌘[ في الماك. معاينة الكتالوج داخل التطبيق بزر رجوع، وشريط «رجوع للتطبيق» في صفحة الكتالوج على أجهزتك. في إعدادات الكتالوج: «إعادة الربط»، و«تغيير المفتاح»، و«فحص الاتصال». وفي الكتالوج: يحفظ الزبون «الفاتورة المؤقتة» PDF لطلبه على جهازه، و«طلباتي السابقة»."],
  ["3.0","ربط الهاتف بخادم الطلبات بسهولة: زر «ربط جهاز آخر» يعرض رمز QR تمسحه بكاميرا الآيفون فيرتبط بنفس الخادم والمفتاح دون نسخ. خانة الرابط تنظف الرموز المخفية التي يضيفها الهاتف عند اللصق، وتقبل رمز الربط، وتشرح سبب الخطأ بدقة. ولا يضيع إعداد الكتالوج عند حفظ إعدادات أخرى من جهاز آخر."],
@@ -2943,7 +2944,7 @@ S.mh=false;S.backPending=false;S.sp={};
   if(S.backPending){S.backPending=false;if(S.pendingPush){const v=S.pendingPush;S.pendingPush=null;try{history.pushState({v},"","#"+v)}catch(_){}}if(document.getElementById("scrim")&&!S.mh)pushM();return}
   if(document.getElementById("scrim")){S.popping=true;S.mh=false;try{closeModal()}finally{S.popping=false}const v=(e.state&&e.state.v)||S.view;if(v!==S.view){S.view=v;render()}return}
   S.mh=false;const v=(e.state&&e.state.v)||location.hash.slice(1)||"home";const y=S.sp[v]||0;if(window.__origPop)window.__origPop(e);setTimeout(()=>window.scrollTo(0,y),40)});
- try{if(!history.state)history.replaceState({v:S.view},"","#"+S.view)}catch(e){}}
+ try{if(!history.state){const hv=location.hash.slice(1);history.replaceState({v:VIEWS[hv]?hv:S.view},"",VIEWS[hv]?location.hash:"#"+S.view)}}catch(e){}}
 /* swipe between tabs must not fire on horizontally scrollable tables, signature pad, previews, chips */
 {const sx=e=>{const t=e.target;return t&&t.closest&&t.closest(".tblw,canvas,.docprev,.phgrid,.chips,[data-noswipe],#scrim")};document.addEventListener("touchstart",e=>{if(sx(e))G=null},{passive:true,capture:false});document.addEventListener("touchend",e=>{if(sx(e))G=null},{capture:true,passive:true})}
 /* Esc closes the top window on Mac/PC */
@@ -3073,6 +3074,32 @@ function oauthRedirect(why){if(!S.sync.clientId)return toast("أدخل معرّ�
  const d=f.parentElement&&f.parentElement.querySelector("details ol");if(d)d.innerHTML=`<li>افتح <b dir="ltr">console.cloud.google.com</b> وأنشئ مشروعًا: <span dir="ltr">Select a project → New Project</span>.</li><li><span dir="ltr">APIs &amp; Services → Library</span> ← <b dir="ltr">Google Drive API</b> ← <span dir="ltr">Enable</span>.</li><li><span dir="ltr">Google Auth Platform → Get started</span>: اسم التطبيق وبريدك، و<span dir="ltr">Audience: External</span>.</li><li><span dir="ltr">Audience → Test users → Add users</span>: أضف بريدك.</li><li><span dir="ltr">Clients → Create client → Web application</span>:<br>• <span dir="ltr">Authorized JavaScript origins</span>: <b dir="ltr">${esc(location.origin)}</b><br>• <span dir="ltr">Authorized redirect URIs</span>: <b dir="ltr">${esc(uri)}</b></li><li>انسخ الـ <span dir="ltr">Client ID</span> والصقه هنا على كل جهاز، مع نفس كلمة التشفير.</li>`}return r}}
 Object.assign(ACT2,{oaCopy:()=>copyRaw(redirectURI(),"تم نسخ العنوان — الصقه في Authorized redirect URIs")});
 {const _ws=webSetup;webSetup=function(step){_ws(step);if(!isStandalone())return;const n=document.querySelector("#scrim .demo-note");if(n)n.insertAdjacentHTML("afterend",`<div class="muted" style="font-size:12.5px">${I.spark} التطبيق المثبت على الشاشة الرئيسية يحفظ بياناته منفصلة عن Safari، لذلك ما ربطته في Safari لا يظهر هنا. الأسهل: فعّل مزامنة Google Drive هنا (فيصل الربط تلقائيًا)، أو الصق «رمز الربط» المنسوخ من جهازك الآخر.</div>`)}}
+
+/* ---------- O. in-app update: check version.json, one-tap update (sync first, clear cache, load fresh) ---------- */
+const vcmp=(a,b)=>{const x=String(a).split(".").map(Number),y=String(b).split(".").map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){const d=(x[i]||0)-(y[i]||0);if(d)return d}return 0};
+const updURL=()=>location.origin+location.pathname.replace(/[^/]*$/,"")+"version.json";
+async function checkUpdate(manual){if(!/^https?:$/.test(location.protocol)||/claude\.ai|claudeusercontent/.test(location.host)){if(manual)toast("التحديث يعمل من نسخة التطبيق على GitHub");return}
+ try{const r=await fetch(updURL()+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();S.updInfo=j;S.local.updChecked=now();
+  if(vcmp(j.v,APP_VER)>0){showUpd(j,manual)}else if(manual)toast(`لديك أحدث إصدار (${APP_VER}) ✓`)}catch(e){if(manual)toast("تعذر التحقق من التحديث. تحقق من الاتصال بالإنترنت.")}}
+function showUpd(j,force){if(!force){try{if(sessionStorage.getItem("idarat_updlater")===j.v)return}catch(e){}}const old=document.getElementById("updbar");if(old)old.remove();
+ document.body.insertAdjacentHTML("beforeend",`<div id="updbar" role="alert"><div class="ui">${I.spark}</div><div class="ut"><b>تحديث جديد متاح — الإصدار <span class="num">${esc(j.v)}</span></b>${j.notes?`<span>${esc(String(j.notes).slice(0,140))}${String(j.notes).length>140?"…":""}</span>`:""}</div><button class="btn sm" data-act="updLater">لاحقًا</button><button class="btn sm primary" data-act="updNow">تحديث الآن</button></div>`)}
+async function doUpdate(){const j=S.updInfo||{};document.body.insertAdjacentHTML("beforeend",`<div id="updwait"><div><div class="spin"></div><b>جارٍ التحديث${j.v?" إلى "+esc(j.v):""}…</b><span>${S.sync&&S.sync.connected?"تُحفظ بياناتك وتُزامن أولًا":"تُحفظ بياناتك أولًا"}</span></div></div>`);
+ try{await save()}catch(e){}
+ if(S.sync&&S.sync.connected&&typeof tokOK==="function"&&tokOK()){try{await Promise.race([syncNow(true),new Promise(r=>setTimeout(r,9000))])}catch(e){}}
+ try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(reg){await reg.update().catch(()=>{});if(reg.waiting)reg.waiting.postMessage("skip")}}catch(e){}
+ try{if(window.caches){const ks=await caches.keys();await Promise.all(ks.filter(k=>/^idarat/.test(k)).map(k=>caches.delete(k)))}}catch(e){}
+ S.local.updFrom=APP_VER;try{await saveLocal()}catch(e){}
+ location.replace(location.pathname.replace(/index\.html$/,"")+"?u="+encodeURIComponent(j.v||Date.now())+"#"+(S.view||"home"))}
+/* clean the ?u= after an update */
+try{if(/[?&]u=/.test(location.search))history.replaceState(history.state,"",location.pathname+location.hash)}catch(e){}
+(function startUpd(){if(!S.db||$("#lock")||$("#ob"))return setTimeout(startUpd,1500);setTimeout(()=>checkUpdate(false),2500)})();
+setInterval(()=>{if(!document.hidden)checkUpdate(false)},30*60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&now()-(S.local.updChecked||0)>10*60000)checkUpdate(false)});
+document.head.insertAdjacentHTML("beforeend",`<style>#updbar{position:fixed;z-index:65;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1.5px solid var(--brand);box-shadow:0 10px 30px rgba(0,0,0,.18)}#updbar .ui{color:var(--brand)}#updbar .ui svg{width:22px;height:22px}#updbar .ut{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13.5px}#updbar .ut span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media (min-width:900px){#updbar{bottom:20px}}
+#updwait{position:fixed;inset:0;z-index:99;background:color-mix(in srgb,var(--bg) 92%,transparent);display:grid;place-items:center;text-align:center}#updwait>div{display:flex;flex-direction:column;align-items:center;gap:8px}#updwait span{color:var(--muted);font-size:13px}#updwait .spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--brand);animation:updspin .8s linear infinite}@keyframes updspin{to{transform:rotate(360deg)}}</style>`);
+/* settings: manual check */
+{const _r=render;render=function(){const r=_r.apply(this,arguments);const v=document.querySelector("main .verline");if(v&&!v.dataset.u){v.dataset.u=1;v.insertAdjacentHTML("beforeend",`<div style="margin-top:8px"><button class="btn sm" data-act="updCheck">البحث عن تحديث</button>${S.local.updChecked?`<span class="muted" style="font-size:12px;margin-inline-start:8px">آخر فحص ${new Date(S.local.updChecked).toLocaleTimeString("ar-OM",{hour:"numeric",minute:"2-digit"})}</span>`:""}</div>`)}return r}}
+Object.assign(ACT2,{updNow:()=>doUpdate(),updLater:()=>{const b=document.getElementById("updbar");if(b)b.remove();try{sessionStorage.setItem("idarat_updlater",(S.updInfo||{}).v||"")}catch(e){}toast("سنذكّرك عند فتح التطبيق مرة أخرى")},updCheck:()=>{toast("جارٍ البحث عن تحديث…");checkUpdate(true)}});
 
 /* ========== events ========== */
 function act(a,ds,el){switch(a){
