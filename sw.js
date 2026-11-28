@@ -1,5 +1,5 @@
 // إدارة أعمالي — يجعل التطبيق يفتح بدون إنترنت
-const CACHE = "idarat-a3mali-v19";
+const CACHE = "idarat-a3mali-v20";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

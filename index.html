@@ -357,7 +357,7 @@ async function fileDel(id){delete MEM.files[id];if(IDB)try{await tx_("files","re
 async function fileKeys(){if(!IDB)return Object.keys(MEM.files);try{return await tx_("files","readonly",s=>s.getAllKeys())}catch(e){return Object.keys(MEM.files)}}
 
 /* ========== state ========== */
-const S={db:null,local:{co:"all",theme:""},sync:{clientId:"",pass:"",connected:false,synced:[],lastSync:0},view:"home",f:{},token:null,tokenExp:0,syncState:"off"};
+window.__oauthHash=/(^#|&)(access_token|error)=/.test(location.hash)?location.hash:"";const S={db:null,local:{co:"all",theme:""},sync:{clientId:"",pass:"",connected:false,synced:[],lastSync:0},view:"home",f:{},token:null,tokenExp:0,syncState:"off"};
 function emptyDB(){return{v:1,companies:[],docs:[],employees:[],tx:[],bills:[],projects:[],folders:[],files:[],parties:[],invoices:[],payables:[],accounts:[],budgets:[],payruns:[],leaves:[],advances:[],log:[],products:[],customers:[],sales:[],deals:[],orders:[],purchases:[],counts:[],returns:[],visits:[],receipts:[],del:{},settings:{alertDays:60,guide:{},sector:"trade",u:0}}}
 function normalizeDB(db){const e=emptyDB();if(!db||typeof db!=="object")return e;for(const c of COLL)if(!Array.isArray(db[c]))db[c]=[];if(!db.del||typeof db.del!=="object")db.del={};
   db.settings={...e.settings,...(db.settings||{})};if(!db.settings.guide||typeof db.settings.guide!=="object")db.settings.guide={};db.v=e.v;return db}
@@ -673,7 +673,7 @@ VIEWS.more=()=>{const it=(k,i,t,d)=>`<button class="item" data-go="${k}"><span c
   <section class="panel"><div class="list">${it("guide",I.compass,"دليل تأسيس المشروع","المستندات المطلوبة في عُمان بالترتيب ومن أين تُستخرج")}${it("help",I.help,"الدليل والمساعدة","بطاقة تعريفية لكل ميزة وطريقة استخدامها")}<button class="item" data-act="tour"><span class="ico">${I.spark}</span><span class="main"><span class="t">الجولة التعريفية</span><div class="s">عرض الشرح السريع للتطبيق من جديد</div></span></button></div></section>
   <section class="panel"><div class="list">${it("log",I.history,"سجل التعديلات","ماذا تغيّر، ومتى، ومن أي جهاز")}${lockActive()?`<button class="item" data-act="lockNow"><span class="ico">${I.lock}</span><span class="main"><span class="t">قفل التطبيق الآن</span><div class="s">يحتاج رمز الدخول أو Face ID للفتح</div></span></button>`:""}${it("prefs",I.gear,"الشركات والإعدادات","الشركات، المزامنة مع Google Drive، النسخ الاحتياطي")}<button class="item" data-act="about"><span class="ico">${I.help}</span><span class="main"><span class="t">عن التطبيق والمصمم</span><div class="s">Majid Al-Rumaimi — IT Engineer &amp; Programmer</div></span></button></div></section>
   <div class="credit">تصميم وبرمجة: م. ماجد الرميمي · <span class="en" dir="ltr">Designed &amp; developed by Eng. Majid Al-Rumaimi</span></div>`};
-const APP_VER="3.1";
+const APP_VER="3.2";
 function aboutPanel(){return`<section class="panel about"><div class="mono">م</div>
   <div class="nm">م. ماجد الرميمي</div><div class="rl">مهندس تقنية معلومات ومبرمج حاسب آلي</div>
   <div class="nm en" style="font-size:16px">Eng. Majid Al-Rumaimi</div><div class="rl en">Information Technology Engineer &amp; Computer Programmer</div>
@@ -1828,6 +1828,7 @@ function greet(d){d=d||new Date();const h=d.getHours();return h>=4&&h<12?"صبا
 setInterval(()=>{const h=document.querySelector("main h1");if(S.view==="home"&&h&&h.textContent!==greet()&&!document.hidden)h.textContent=greet()},60000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.view==="home"){const h=document.querySelector("main h1");if(h)h.textContent=greet()}});
 const CHANGES=[
+ ["3.2","مزامنة Google Drive تعمل الآن في التطبيق المثبت على شاشة الآيفون وفي Dock الماك: الدخول إلى Google داخل التطبيق ثم العودة تلقائيًا بدل النافذة المنبثقة، مع حفظ الإذن وتجديده تلقائيًا عند فتح التطبيق. عنوان إعادة التوجيه وخطوات Google Cloud المحدّثة في الإعدادات."],
  ["3.1","زر «رجوع» واضح أعلى كل صفحة يعود للصفحة التي جئت منها، والسحب من الحافة اليمنى للرجوع في الآيفون، واختصار ⌥→ أو ⌘[ في الماك. معاينة الكتالوج داخل التطبيق بزر رجوع، وشريط «رجوع للتطبيق» في صفحة الكتالوج على أجهزتك. في إعدادات الكتالوج: «إعادة الربط»، و«تغيير المفتاح»، و«فحص الاتصال». وفي الكتالوج: يحفظ الزبون «الفاتورة المؤقتة» PDF لطلبه على جهازه، و«طلباتي السابقة»."],
  ["3.0","ربط الهاتف بخادم الطلبات بسهولة: زر «ربط جهاز آخر» يعرض رمز QR تمسحه بكاميرا الآيفون فيرتبط بنفس الخادم والمفتاح دون نسخ. خانة الرابط تنظف الرموز المخفية التي يضيفها الهاتف عند اللصق، وتقبل رمز الربط، وتشرح سبب الخطأ بدقة. ولا يضيع إعداد الكتالوج عند حفظ إعدادات أخرى من جهاز آخر."],
  ["2.9","سلاسة التنقل: زر الرجوع في الهاتف يغلق النافذة المفتوحة أولًا ثم يعود للصفحة السابقة بنفس موضع التمرير، وEsc يغلق النوافذ في الماك. منع التكبير بالقرص والنقر المزدوج في التطبيق والكتالوج، ونوافذ تتسع للشاشة على الآيفون وفي الوضع الأفقي، وعدم التنقل بالسحب داخل الجداول والتوقيع."],
@@ -3040,6 +3041,38 @@ function catPreview(){const l=webLink();if(!l)return toast("انشر الكتا�
 window.addEventListener("message",e=>{if(e.origin===location.origin&&e.data&&e.data.t==="closePreview")closeModal()});
 try{localStorage.setItem("idarat_owner","1")}catch(e){}
 Object.assign(ACT2,{navBack:()=>navBack(),webPreview:()=>catPreview(),pvOut:()=>{const l=webLink();anchorOpen(l+(l.includes("?")?"&":"?")+"owner=1")}});
+
+/* ---------- N. Google sign-in that works in the installed app (iPhone home screen / Mac Dock): redirect flow + token persistence ---------- */
+const OA={tok:"idarat_gtok",st:"idarat_gst",redir:"idarat_redir",auto:"idarat_autoauth"};
+const isStandalone=()=>{try{return navigator.standalone===true||matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: fullscreen)").matches||matchMedia("(display-mode: minimal-ui)").matches}catch(e){return false}};
+const useRedirect=()=>isStandalone()||localStorage.getItem(OA.redir)==="1";
+const redirectURI=()=>location.origin+location.pathname.replace(/index\.html$/,"");
+const tokOK=()=>!!(S.token&&S.tokenExp>Date.now()+60000);
+function keepTok(){try{localStorage.setItem(OA.tok,JSON.stringify({t:S.token,exp:S.tokenExp}))}catch(e){}}
+try{const t=JSON.parse(localStorage.getItem(OA.tok)||"null");if(t&&t.exp>Date.now()+60000){S.token=t.t;S.tokenExp=t.exp}}catch(e){}
+/* returning from Google */
+(()=>{const h=window.__oauthHash||"";if(!h)return;const p=new URLSearchParams(h.replace(/^#/,""));let st={};try{st=JSON.parse(localStorage.getItem(OA.st)||"{}")}catch(e){}try{localStorage.removeItem(OA.st)}catch(e){}
+ const v=st.v&&VIEWS[st.v]?st.v:"home";try{history.replaceState({v},"","#"+v)}catch(e){}
+ if(!st.n||p.get("state")!==st.n){S.oauthMsg="state";return}
+ if(p.get("access_token")){S.token=p.get("access_token");S.tokenExp=Date.now()+(+p.get("expires_in")||3600)*1000;keepTok();S.oauthOK=st.why||"sync"}else S.oauthMsg=p.get("error")||"error"})();
+function oauthRedirect(why){if(!S.sync.clientId)return toast("أدخل معرّف العميل أولًا");const n=Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem(OA.st,JSON.stringify({n,v:S.view,why,at:Date.now()}))}catch(e){}
+ const q=new URLSearchParams({client_id:S.sync.clientId,redirect_uri:redirectURI(),response_type:"token",scope:SCOPE,include_granted_scopes:"true",state:n});if(!S.sync.connected)q.set("prompt","select_account consent");
+ setSync("busy");location.href="https://accounts.google.com/o/oauth2/v2/auth?"+q}
+{const _gt=getToken;getToken=async function(interactive){if(tokOK())return S.token;
+ if(useRedirect()){if(interactive){oauthRedirect("sync");return new Promise(()=>{})}throw new Error("need-auth")}
+ try{const t=await _gt(interactive);keepTok();return t}catch(e){const m=String(e.message||e);if(interactive&&/popup|closed|failed|gis/.test(m)&&S.sync.clientId){try{localStorage.setItem(OA.redir,"1")}catch(_){}oauthRedirect("sync");return new Promise(()=>{})}throw e}}}
+{const _sn=syncNow;syncNow=async function(silent){if(silent&&useRedirect()&&!tokOK()&&S.sync.clientId){setSync("wait");return}return _sn(silent)}}
+/* after returning: finish sync; on launch: quick silent renewal if the permission expired */
+(function after(){if(!S.db||$("#lock"))return setTimeout(after,500);
+ if(S.oauthOK){S.oauthOK=null;setTimeout(()=>syncNow(false),300);return}
+ if(S.oauthMsg){const m=S.oauthMsg;S.oauthMsg=null;setSync("err");toast(m==="access_denied"?"لم تُمنح الصلاحية. تأكد أن بريدك مضاف في Test users ثم أعد المحاولة.":m==="state"?"انتهت محاولة الربط. اضغط «ربط Google Drive» مرة أخرى.":"تعذر ربط Google: "+m,6000);return}
+ if(S.sync.connected&&useRedirect()&&!tokOK()&&navigator.onLine!==false){let done=false;try{done=sessionStorage.getItem(OA.auto)==="1"}catch(e){}if(!done&&now()-(S.sync.lastSync||0)>20*60000){try{sessionStorage.setItem(OA.auto,"1")}catch(e){}toast("جارٍ تحديث إذن Google Drive…",3000);setTimeout(()=>oauthRedirect("sync"),900)}else setSync("wait")}})();
+/* settings panel: redirect address + updated Google Cloud steps */
+{const _r=render;render=function(){const r=_r.apply(this,arguments);const f=document.getElementById("syncForm");if(f&&!f.dataset.oa){f.dataset.oa=1;const uri=redirectURI();
+ f.insertAdjacentHTML("beforeend",`<div class="demo-note" style="border-style:solid;margin-top:4px">${I.lock}<span class="sp" style="font-size:13px"><b>للتطبيق المثبت على الشاشة الرئيسية أو Dock:</b> أضف هذا العنوان مرة واحدة في Google Cloud ← <span dir="ltr">Google Auth Platform → Clients</span> ← عميلك ← <b dir="ltr">Authorized redirect URIs</b>:<div class="num" dir="ltr" style="text-align:left;overflow-wrap:anywhere;margin-top:4px;font-weight:600">${esc(uri)}</div></span><button type="button" class="btn sm" data-act="oaCopy">نسخ</button></div>${isStandalone()?`<div class="muted" style="font-size:12.5px">${I.check} هذا الجهاز يعمل كتطبيق مثبت: يتم الدخول إلى Google داخل التطبيق ثم يعود تلقائيًا.</div>`:""}`);
+ const d=f.parentElement&&f.parentElement.querySelector("details ol");if(d)d.innerHTML=`<li>افتح <b dir="ltr">console.cloud.google.com</b> وأنشئ مشروعًا: <span dir="ltr">Select a project → New Project</span>.</li><li><span dir="ltr">APIs &amp; Services → Library</span> ← <b dir="ltr">Google Drive API</b> ← <span dir="ltr">Enable</span>.</li><li><span dir="ltr">Google Auth Platform → Get started</span>: اسم التطبيق وبريدك، و<span dir="ltr">Audience: External</span>.</li><li><span dir="ltr">Audience → Test users → Add users</span>: أضف بريدك.</li><li><span dir="ltr">Clients → Create client → Web application</span>:<br>• <span dir="ltr">Authorized JavaScript origins</span>: <b dir="ltr">${esc(location.origin)}</b><br>• <span dir="ltr">Authorized redirect URIs</span>: <b dir="ltr">${esc(uri)}</b></li><li>انسخ الـ <span dir="ltr">Client ID</span> والصقه هنا على كل جهاز، مع نفس كلمة التشفير.</li>`}return r}}
+Object.assign(ACT2,{oaCopy:()=>copyRaw(redirectURI(),"تم نسخ العنوان — الصقه في Authorized redirect URIs")});
+{const _ws=webSetup;webSetup=function(step){_ws(step);if(!isStandalone())return;const n=document.querySelector("#scrim .demo-note");if(n)n.insertAdjacentHTML("afterend",`<div class="muted" style="font-size:12.5px">${I.spark} التطبيق المثبت على الشاشة الرئيسية يحفظ بياناته منفصلة عن Safari، لذلك ما ربطته في Safari لا يظهر هنا. الأسهل: فعّل مزامنة Google Drive هنا (فيصل الربط تلقائيًا)، أو الصق «رمز الربط» المنسوخ من جهازك الآخر.</div>`)}}
 
 /* ========== events ========== */
 function act(a,ds,el){switch(a){
